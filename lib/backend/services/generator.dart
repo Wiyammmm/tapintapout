@@ -2,7 +2,6 @@ import 'package:tapintapout/core/utils.dart';
 
 class GeneratorServices {
   String generateTicketNo() {
-    final transactions = myBox.get('transactions');
     DateTime now = DateTime.now();
     String formattedMonth = now.month.toString().padLeft(2, '0');
     String formattedDay = now.day.toString().padLeft(2, '0');
@@ -16,7 +15,7 @@ class GeneratorServices {
     String formattedMinutes = minutes.toString().padLeft(2, '0');
     String currentDate =
         "$formattedMonth$formattedDay$formattedYear$formattedHours$formattedMinutes";
-    String ticketNumber = '$currentDate-${transactions.length + 1}';
+    String ticketNumber = '$currentDate-${tapinController.tapin.length + 1}';
     return ticketNumber;
   }
 }

@@ -1,9 +1,16 @@
 import 'package:art_sweetalert/art_sweetalert.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:get/get.dart';
 import 'package:nfc_manager/nfc_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:tapintapout/backend/nfc.dart';
 import 'package:tapintapout/backend/printer/printServices.dart';
 import 'package:tapintapout/backend/printer/printerController.dart';
+import 'package:tapintapout/backend/services/udp_services.dart';
+import 'package:tapintapout/presentation/pages/settings.dart';
+import 'package:tapintapout/presentation/pages/transactionPage.dart';
 import 'package:tapintapout/presentation/widgets/base.dart';
 import 'package:tapintapout/presentation/widgets/buttons.dart';
 import 'package:tapintapout/presentation/widgets/dialogs.dart';
@@ -11,33 +18,66 @@ import 'package:tapintapout/presentation/widgets/dialogs.dart';
 import '../../core/utils.dart';
 
 class HomePage extends StatefulWidget {
-  HomePage({super.key, required this.thisTitle});
-  final String thisTitle;
+  HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  PrinterController connectToPrinter = PrinterController();
+  PrinterController connectToPrinter = Get.put(PrinterController());
   NfcService nfcService = NfcService();
-  List<Map<String, dynamic>> tags = [];
-  List<String> transactions = [];
+
+  // final UdpService udpService = Get.find<UdpService>();
   @override
   void initState() {
+    _startLocation();
     _checkNfcAndStartSession();
     _connectToPrinter();
-    myBox.put('tags', tags);
-    myBox.put('transactions', tags);
-    // tags = myBox.get('tags');
+    _askPermission();
+    if (!udpService.isConnected.value) {
+      udpService.initializeUDP();
+    }
 
+    udpService.listenToMessages((String message) async {
+      if (!mounted) return;
+      print("New message received: $message");
+      if (message.contains("uid:")) {
+        RegExp uidRegex = RegExp(r'uid:([A-F0-9]+)');
+        var uidMatch = uidRegex.firstMatch(message);
+        if (uidMatch != null) {
+          String uid = uidMatch.group(1)!;
+          print('UID: $uid');
+          _processTransactionResponse(uid);
+
+          // _transactionProcess(uid);
+        }
+      } else {
+        print("No UID found in the string.");
+      }
+    });
     super.initState();
+  }
+
+  void _startLocation() async {
+    await deviceInfoService.startGeolocatorTracking();
+  }
+
+  void _processTransactionResponse(String uid) async {
+    Map<String, dynamic> processTransactionResponse =
+        await processServices.transactionProcess(uid, context);
+    print('processTransactionResponse: $processTransactionResponse');
   }
 
   @override
   void dispose() {
     flutterTts.stop(); // Ensure TTS is stopped when the widget is disposed
     super.dispose();
+  }
+
+  void _askPermission() async {
+    await Permission.location.request();
+    await Permission.storage.request();
   }
 
   void _connectToPrinter() async {
@@ -77,96 +117,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  Future _speak(String text) async {
-    await flutterTts.setLanguage("en-US");
-    await flutterTts.setPitch(1.0);
-    await flutterTts.speak(text);
-  }
-
-  void _addTransction(String tagId, String ticketNumber) async {
-    Map<String, dynamic> addTransactionResponse =
-        await apiServices.addTransaction({
-      "coopId": "6569bf3b691671079b8324da",
-      "cardId": tagId,
-      "tapOutLat": "14.000",
-      "tapOutLong": "14.000",
-      "tapInLat": "14.000",
-      "tapInLong": "14.000",
-      "tapInStation": "Station 1",
-      "tapOutStation": "Station 2",
-      "km_run": 0,
-      "amount": 30,
-      "discount": 0,
-      "fare": 30,
-      "cardType": 'regular',
-      "mop": 'filipaycard',
-      "status": "tapin",
-      "maxfare": 30,
-      "ticketNumber": ticketNumber
-    });
-    if (addTransactionResponse['messages']['code'] == 0) {
-      String text = "Tap-in Successfully!";
-      _speak(text);
-      DialogUtils.showTapin(context);
-    } else {
-      String text = "${addTransactionResponse['messages']['message']}";
-      _speak(text);
-      ArtSweetAlert.show(
-          context: context,
-          barrierDismissible: false,
-          artDialogArgs: ArtDialogArgs(
-            title: 'Something went wrong',
-            text: '${addTransactionResponse['messages']['message']}',
-            type: ArtSweetAlertType.danger,
-          ));
-    }
-  }
-
-  void _updateTransction(String tagId, String ticketNumber) async {
-    Map<String, dynamic> addTransactionResponse =
-        await apiServices.updateTransaction({
-      "coopId": "6569bf3b691671079b8324da",
-      "cardId": tagId,
-      "tapOutLat": "14.000",
-      "tapOutLong": "14.000",
-      "tapInLat": "14.000",
-      "tapInLong": "14.000",
-      "tapInStation": "Station 1",
-      "tapOutStation": "Station 2",
-      "km_run": 3,
-      "amount": 13,
-      "discount": 0,
-      "fare": 13,
-      "cardType": 'regular',
-      "mop": 'filipaycard',
-      "status": "tapout",
-      "maxfare": 30,
-      "ticketNumber": ticketNumber
-    });
-    if (addTransactionResponse['messages']['code'] == 0) {
-      myBox.put('transactions', transactions);
-      myBox.put('tags', tags);
-      String text = "Tap-out Successfully!";
-      _speak(text);
-      DialogUtils.showTapout(
-          context,
-          double.parse(
-              "${addTransactionResponse['response']['balance']['newBalance']}"));
-      printServices.printTransactionReceipt(addTransactionResponse['response']);
-    } else {
-      String text = "${addTransactionResponse['messages']['message']}";
-      _speak(text);
-      ArtSweetAlert.show(
-          context: context,
-          barrierDismissible: false,
-          artDialogArgs: ArtDialogArgs(
-            title: 'Something went wrong',
-            text: '${addTransactionResponse['messages']['message']}',
-            type: ArtSweetAlertType.danger,
-          ));
-    }
-  }
-
   Future<void> _checkNfcAndStartSession() async {
     bool isAvailable = await NfcManager.instance.isAvailable();
 
@@ -176,29 +126,8 @@ class _HomePageState extends State<HomePage> {
         onDiscovered: (NfcTag tag) async {
           String tagId = nfcService.extractTagId(tag);
           print('tagid: $tagId');
-          if (tags.isNotEmpty) {
-            if (tags.any((item) => item['cardId'] == tagId)) {
-              Map<String, dynamic> item =
-                  tags.firstWhere((item) => item['cardId'] == tagId);
-              // Retrieve the name from the found map
-              String ticketNumber = item['ticketNumber'];
-              tags.removeWhere((item) => item['cardId'] == tagId);
-              setState(() {
-                transactions.add(tagId);
-              });
-
-              _updateTransction(tagId, ticketNumber);
-            } else {
-              String ticketNumber = generatorServices.generateTicketNo();
-              _addTransction(tagId, ticketNumber);
-              tags.add({"cardId": tagId, "ticketNumber": ticketNumber});
-            }
-          } else {
-            String ticketNumber = generatorServices.generateTicketNo();
-            _addTransction(tagId, ticketNumber);
-            tags.add({"cardId": tagId, "ticketNumber": ticketNumber});
-          }
-          print('tags: $tags');
+          // _transactionProcess(tagId);
+          _processTransactionResponse(tagId);
         },
       );
     } else {
@@ -215,85 +144,165 @@ class _HomePageState extends State<HomePage> {
           // Return false to prevent the back button action
           return false;
         },
-        child: BasePage(
-            child: Column(
-          children: [
-            myAppBar(context),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  Container(
-                    width: MediaQuery.of(context).size.width,
-                    decoration: BoxDecoration(
-                        border: Border.all(width: 1, color: Colors.black),
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: Text(
-                        'Route: ${widget.thisTitle}',
-                        textAlign: TextAlign.center,
+        child: BasePage(child: Obx(() {
+          return Column(
+            children: [
+              AppBarWidget(context: context),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                          border: Border.all(width: 1, color: Colors.black),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              udpService.tps530IP.value == ""
+                                  ? 'Disconnected: '
+                                  : 'Connected:  ',
+                              textAlign: TextAlign.center,
+                            ),
+                            Container(
+                              height: 25,
+                              width: 25,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(100),
+                                  color: udpService.tps530IP.value == ""
+                                      ? Colors.red
+                                      : Colors.green),
+                            )
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        'assets/filipaycircle.png',
-                        width: MediaQuery.of(context).size.width * 0.7,
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Container(
+                      width: MediaQuery.of(context).size.width,
+                      decoration: BoxDecoration(
+                          border: Border.all(width: 1, color: Colors.black),
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          'Route: ${routeController.selectedRoute.value?.origin}-${routeController.selectedRoute.value?.destination}',
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Image.asset(
-                            'assets/filipaywoman.png',
-                            width: 70,
-                          ),
-                          const Text(
-                            'TAP YOUR NFC CARD',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, fontSize: 18),
-                          )
-                        ],
-                      ),
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          circleButton(
-                            thisIcon: Icon(
-                              Icons.qr_code,
-                              size: 40,
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/filipaycircle.png',
+                          width: MediaQuery.of(context).size.width * 0.7,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Image.asset(
+                              'assets/filipaywoman.png',
+                              width: 70,
                             ),
-                          ),
-                          SizedBox(
-                            width: 10,
-                          ),
-                          circleButton(
-                            thisIcon: Icon(
-                              Icons.refresh,
-                              size: 40,
+                            const Text(
+                              'TAP YOUR NFC CARD',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold, fontSize: 18),
+                            )
+                          ],
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const circleButton(
+                              thisIcon: Icon(
+                                Icons.qr_code,
+                                size: 40,
+                              ),
                             ),
-                          )
-                        ],
-                      )
-                    ],
-                  )
-                ],
-              ),
-            )
-          ],
-        )),
+                            // const SizedBox(
+                            //   width: 10,
+                            // ),
+                            // const circleButton(
+                            //   thisIcon: Icon(
+                            //     Icons.refresh,
+                            //     size: 40,
+                            //   ),
+                            // ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => TransactionPage()),
+                                );
+                              },
+                              child: const circleButton(
+                                thisIcon: Icon(
+                                  Icons.file_present_outlined,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(
+                              width: 10,
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => SettingsPage()),
+                                );
+                              },
+                              child: const circleButton(
+                                thisIcon: Icon(
+                                  Icons.settings,
+                                  size: 40,
+                                ),
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    )
+                  ],
+                ),
+              )
+            ],
+          );
+        })),
       ),
     );
   }
+}
 
-  Container myAppBar(BuildContext context) {
+class AppBarWidget extends StatelessWidget {
+  const AppBarWidget({
+    super.key,
+    required this.context,
+  });
+
+  final BuildContext context;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(color: Colors.lightBlue),
       child: Row(
@@ -306,30 +315,33 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.white, borderRadius: BorderRadius.circular(5)),
               child: Padding(
                 padding: const EdgeInsets.all(4.0),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${transactions.length}',
-                      style:
-                          TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-                    ),
-                    const Text(
-                      'Pass\nCount',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 10),
-                    )
-                  ],
-                ),
+                child: Obx(() {
+                  return Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${tapinController.tapin.length}',
+                        style: TextStyle(
+                            fontSize: 15, fontWeight: FontWeight.bold),
+                      ),
+                      const Text(
+                        'Pass\nCount',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 10),
+                      )
+                    ],
+                  );
+                }),
               ),
             ),
           ),
-          const FittedBox(
+          FittedBox(
             child: Text(
-              'SERVICE ECONOMY\nAPPLICATION INC.',
+              printServices.breakString(
+                  '${coopInfoController.coopInfo.value?.cooperativeName}', 24),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                   color: Colors.white),

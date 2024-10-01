@@ -1,8 +1,9 @@
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+import 'package:get/get.dart';
 
-class PrinterController {
+class PrinterController extends GetxService {
   BlueThermalPrinter bluetooth = BlueThermalPrinter.instance;
-  bool _connected = false;
+  var connected = false.obs;
   Future<bool> connectToPrinter() async {
     BluetoothDevice? targetDevice;
     try {
@@ -17,41 +18,41 @@ class PrinterController {
         }
       }
       if (targetDevice != null) {
-        _connected = true;
+        connected.value = true;
       } else {
         bluetooth.onStateChanged().listen((state) {
           switch (state) {
             case BlueThermalPrinter.CONNECTED:
-              _connected = true;
+              connected.value = true;
               print("bluetooth device state: connected");
               break;
             case BlueThermalPrinter.DISCONNECTED:
-              _connected = false;
+              connected.value = false;
               print("bluetooth device state: disconnected");
               break;
             case BlueThermalPrinter.DISCONNECT_REQUESTED:
-              _connected = false;
+              connected.value = false;
               print("bluetooth device state: disconnect requested");
               break;
             case BlueThermalPrinter.STATE_TURNING_OFF:
-              _connected = false;
+              connected.value = false;
               print("bluetooth device state: bluetooth turning off");
               break;
             case BlueThermalPrinter.STATE_OFF:
-              _connected = false;
+              connected.value = false;
               print("bluetooth device state: bluetooth off");
               break;
             case BlueThermalPrinter.STATE_ON:
-              _connected = false;
+              connected.value = false;
 
               print("bluetooth device state: bluetooth on");
               break;
             case BlueThermalPrinter.STATE_TURNING_ON:
-              _connected = false;
+              connected.value = false;
               print("bluetooth device state: bluetooth turning on");
               break;
             case BlueThermalPrinter.ERROR:
-              _connected = false;
+              connected.value = false;
               print("bluetooth device state: error");
               break;
             default:
@@ -68,11 +69,11 @@ class PrinterController {
         bool isConnected = await bluetooth.isConnected ?? false;
         if (!isConnected) {
           await bluetooth.connect(targetDevice).catchError((error) {
-            _connected = false;
+            connected.value = false;
           });
-          _connected = true;
+          connected.value = true;
         }
-        return _connected;
+        return connected.value;
       } else {
         print('Printer not found or not paired.');
         return false;
@@ -85,9 +86,9 @@ class PrinterController {
   }
 
   void disconnectFromPrinter() {
-    if (_connected) {
+    if (connected.value) {
       bluetooth.disconnect();
-      _connected = false;
+      connected.value = false;
     }
   }
 
@@ -101,7 +102,7 @@ class PrinterController {
 //   final printerController = PrinterController();
 //   await printerController.connectToPrinter();
 
-//   if (printerController._connected) {
+//   if (printerController.connected.value) {
 //     // Use the printer for printing
 //     printerController.printReceipt();
 //   }

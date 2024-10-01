@@ -15,8 +15,9 @@ class SweetAlertUtils {
         artDialogArgs: ArtDialogArgs(
             denyButtonText: "Cancel",
             title: "Are you sure?",
-            text: "Route: $thisTitle",
+            text: "$thisTitle",
             confirmButtonText: "Yes",
+            confirmButtonColor: Colors.blueAccent,
             type: ArtSweetAlertType.warning,
             onConfirm: onConfirm));
   }
@@ -25,14 +26,53 @@ class SweetAlertUtils {
     BuildContext context, {
     required String thisTitle,
     String title = "Something went Wrong",
+    required VoidCallback onConfirm,
   }) {
     ArtSweetAlert.show(
         context: context,
         barrierDismissible: false,
         artDialogArgs: ArtDialogArgs(
-          title: title,
-          text: thisTitle,
-          type: ArtSweetAlertType.danger,
-        ));
+            title: title,
+            text: thisTitle,
+            type: ArtSweetAlertType.danger,
+            confirmButtonText: "OK",
+            confirmButtonColor: Colors.blueAccent,
+            onConfirm: onConfirm));
+  }
+
+  static void showInformationDialog(
+    BuildContext context, {
+    required String thisTitle,
+    String title = "Something went Wrong",
+    required VoidCallback onConfirm,
+  }) {
+    ArtSweetAlert.show(
+        context: context,
+        barrierDismissible: false,
+        artDialogArgs: ArtDialogArgs(
+            title: title,
+            text: thisTitle,
+            type: ArtSweetAlertType.info,
+            confirmButtonText: "OK",
+            confirmButtonColor: Colors.blueAccent,
+            onConfirm: onConfirm));
+  }
+
+  static void showSuccessDialog(
+    BuildContext context, {
+    required String thisTitle,
+    String title = "Something went Wrong",
+    required VoidCallback onConfirm,
+  }) {
+    ArtSweetAlert.show(
+        context: context,
+        barrierDismissible: false,
+        artDialogArgs: ArtDialogArgs(
+            title: title,
+            text: thisTitle,
+            type: ArtSweetAlertType.success,
+            confirmButtonText: "OK",
+            confirmButtonColor: Colors.blueAccent,
+            onConfirm: onConfirm));
   }
 }
