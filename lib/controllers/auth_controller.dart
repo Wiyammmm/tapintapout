@@ -49,7 +49,7 @@ class AuthController extends GetxService {
         await userInfoController.updateUserInfoValue(userInfoModel);
         await coopInfoController.updateCoopInfoValue(coopInfoModel);
         print('success');
-
+        dataController.fetchAndStoreData();
         errorPrompt.value.clear();
         Get.offAllNamed(Routes.ROUTE_DETAIL);
       }

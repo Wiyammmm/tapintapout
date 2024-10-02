@@ -20,14 +20,15 @@ class SessionModelAdapter extends TypeAdapter<SessionModel> {
       routeId: fields[0] as String,
       lastStationId: fields[1] as String,
       targetStationId: fields[2] as String,
-      isReversed: fields[3] as bool,
+      vehicleId: fields[3] as String,
+      isReversed: fields[4] as bool,
     );
   }
 
   @override
   void write(BinaryWriter writer, SessionModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(5)
       ..writeByte(0)
       ..write(obj.routeId)
       ..writeByte(1)
@@ -35,6 +36,8 @@ class SessionModelAdapter extends TypeAdapter<SessionModel> {
       ..writeByte(2)
       ..write(obj.targetStationId)
       ..writeByte(3)
+      ..write(obj.vehicleId)
+      ..writeByte(4)
       ..write(obj.isReversed);
   }
 

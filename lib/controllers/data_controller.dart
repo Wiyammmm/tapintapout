@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:tapintapout/controllers/coopinfo_controller.dart';
@@ -18,12 +19,16 @@ class DataController extends GetxService {
   var isLoading = false.obs;
   var routes = <RouteModel>[].obs;
   var filteredRoutes = <RouteModel>[].obs;
+  var selectedRoute = Rxn<RouteModel>();
+  var filteredVehicles = <VehicleModel>[].obs;
+  var selectedVehicle = Rx<VehicleModel?>(null);
   var progress = 0.0.obs;
   var progressText = "fetching Routes".obs;
   var filipayCards = <FilipayCardModel>[].obs;
   var vehicles = <VehicleModel>[].obs;
   RxMap<String, dynamic> errorPrompt = <String, dynamic>{}.obs;
   var isRouteVisible = false.obs;
+  var isVehicleVisible = false.obs;
 
   // @override
   // void onInit() {
@@ -41,12 +46,16 @@ class DataController extends GetxService {
 
     routes.value = await hiveService.getRoutes();
     vehicles.value = await hiveService.getVehicles();
+
     tapinController.tapin.value = await hiveService.getTapin();
     sessionController.session.value = await hiveService.getSession();
 
     if (sessionController.session.value != null) {
-      routeController
-          .getSelectedRoute(sessionController.session.value!.routeId);
+      getSelectedRoute(sessionController.session.value!.routeId);
+      if (sessionController.session.value!.vehicleId != '') {
+        selectedVehicle.value = vehicles.firstWhere((vehicle) =>
+            vehicle.id == sessionController.session.value!.vehicleId);
+      }
 
       if (sessionController.session.value!.routeId != '') {
         await stationController
@@ -56,6 +65,10 @@ class DataController extends GetxService {
 
     tapoutController.transaction.value = await hiveService.getTransaction();
     tapoutController.transaction.refresh();
+
+    if (dataController.selectedRoute.value == null) {
+      dataController.fetchAndStoreData();
+    }
   }
 
   Future<void> fetchAndStoreData() async {
@@ -155,7 +168,9 @@ class DataController extends GetxService {
 
       if (vehicleList.isNotEmpty) {
         await hiveService.storeVehicles(vehicleList);
+
         vehicles.value = vehicleList;
+        filteredVehicles.value = vehicleList;
       }
 
       if (sessionController.session.value != null) {
@@ -223,12 +238,32 @@ class DataController extends GetxService {
     }
   }
 
-  void updateSession(
-      String routeid, String lastStationId, String targetStationId) async {
+  void filterVehicles(String query) {
+    if (query.isEmpty) {
+      filteredVehicles.value = vehicles;
+    } else {
+      filteredVehicles.value = vehicles
+          .where((vehicle) =>
+              vehicle.vehicle_no.toLowerCase().contains(query.toLowerCase()) ||
+              vehicle.plate_no.toLowerCase().contains(query.toLowerCase()))
+          .toList();
+    }
+  }
+
+  Future<void> getSelectedRoute(String id) async {
+    final routeList = await hiveService.getRoutes();
+    selectedRoute.value = routeList.firstWhere((route) => route.id == id);
+    print(
+        'selectedRoute.value: ${selectedRoute.value?.origin}-${selectedRoute.value?.destination}');
+  }
+
+  void updateSession(String routeid, String lastStationId,
+      String targetStationId, String vehicleId) async {
     SessionModel session = SessionModel(
         routeId: routeid,
         lastStationId: lastStationId,
-        targetStationId: targetStationId);
+        targetStationId: targetStationId,
+        vehicleId: vehicleId);
     sessionController.session.value = session;
     print(
         'sessionController Route ID: ${sessionController.session.value?.routeId}');

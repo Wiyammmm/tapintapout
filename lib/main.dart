@@ -50,7 +50,7 @@ class MyApp extends StatelessWidget {
       initialRoute:
           (dataController.filipayCards.isEmpty && tapinController.tapin.isEmpty)
               ? Routes.LOGIN
-              : routeController.selectedRoute.value == null
+              : dataController.selectedRoute.value == null
                   ? Routes.ROUTE_DETAIL
                   : Routes.HOME,
       getPages: AppPages.routes,

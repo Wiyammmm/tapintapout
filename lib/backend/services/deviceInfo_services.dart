@@ -152,7 +152,10 @@ class DeviceInfoService extends GetxService {
                 "mop": "${element.mop}",
                 "status": '${element.status}',
                 "maxfare": element.maxfare,
-                "ticketNumber": "${element.ticketNumber}"
+                "ticketNumber": "${element.ticketNumber}",
+                "vehicleNo": "${element.vehicleNo}",
+                "plateNumber": "${element.plateNumber}",
+                "date": "${element.date}"
               };
               final sendTransactionResponse =
                   await dataController.sendTransaction(item);

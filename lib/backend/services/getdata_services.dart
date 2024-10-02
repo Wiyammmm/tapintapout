@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:tapintapout/core/utils.dart';
 import 'package:tapintapout/models/filipaycard_model.dart';
 import 'package:tapintapout/models/station_model.dart';
+import 'package:tapintapout/models/vehicle_model.dart';
 
 class GetDataServices {
   Future<String> getOrigin(String stationId) async {
@@ -39,6 +40,7 @@ class GetDataServices {
 
   String getDateTime() {
     DateTime now = DateTime.now();
+    print('datenow: ${now.toString()}');
     return DateFormat('MM-dd-yyyy hh:mm a').format(now);
   }
 
@@ -46,17 +48,22 @@ class GetDataServices {
       String destinationStationId, String cardid) async {
     Map<String, dynamic> dataResponse = {
       'kmrun': 0,
-      'fare': routeController.selectedRoute.value!.maximumFare,
+      'fare': dataController.selectedRoute.value!.maximumFare,
       'discount': 0,
       'amount': 0,
       'tapinStationName': '',
-      'tapOutStationName': ''
+      'tapOutStationName': '',
+      'vehicleNo': '',
+      'plateNumber': ''
     };
 
     double kmrun = 0;
     double fare = 0;
     double discount = 0;
     double amount = 0;
+
+    VehicleModel selectedVehicle =
+        await getDataServices.getSelectedVehicleInfo();
 
     List<FilipayCardModel> filipaycards = await hiveService.getFilipayCards();
     FilipayCardModel card =
@@ -84,12 +91,12 @@ class GetDataServices {
     // end get kmrun
 
     // start get fare
-    if (kmrun < routeController.selectedRoute.value!.first_km) {
-      fare = routeController.selectedRoute.value!.minimum_fare;
+    if (kmrun < dataController.selectedRoute.value!.first_km) {
+      fare = dataController.selectedRoute.value!.minimum_fare;
     } else {
-      fare = ((kmrun - routeController.selectedRoute.value!.first_km) *
-              routeController.selectedRoute.value!.pricePerKM) +
-          routeController.selectedRoute.value!.minimum_fare;
+      fare = ((kmrun - dataController.selectedRoute.value!.first_km) *
+              dataController.selectedRoute.value!.pricePerKM) +
+          dataController.selectedRoute.value!.minimum_fare;
     }
     // end get fare
 
@@ -100,7 +107,7 @@ class GetDataServices {
         dataController.filipayCards.firstWhere((card) => card.cardID == cardid);
 
     if (filipayCardInfo.sNo.contains('SND')) {
-      discount = fare * (routeController.selectedRoute.value!.discount / 100);
+      discount = fare * (dataController.selectedRoute.value!.discount / 100);
     }
 
     // end get discount
@@ -110,11 +117,11 @@ class GetDataServices {
     // end get amount
 
     udpService.sendMessage(
-        "tapout:{ \'remainingBalance\': ${card.balance + amount}, \'maxFare\': ${routeController.selectedRoute.value!.maximumFare},\'refund\': ${routeController.selectedRoute.value!.maximumFare - amount},\'kmRun\': $kmrun,\'fare\': $fare,\'discount\': $discount}");
+        "tapout:{ \'remainingBalance\': ${card.balance + amount}, \'maxFare\': ${dataController.selectedRoute.value!.maximumFare},\'refund\': ${dataController.selectedRoute.value!.maximumFare - amount},\'kmRun\': $kmrun,\'fare\': $fare,\'discount\': $discount}");
     dialogUtils.showTapout(Get.context!, () {}, {
       'remainingBalance': card.balance + amount,
-      'maxFare': routeController.selectedRoute.value!.maximumFare,
-      'refund': routeController.selectedRoute.value!.maximumFare - amount,
+      'maxFare': dataController.selectedRoute.value!.maximumFare,
+      'refund': dataController.selectedRoute.value!.maximumFare - amount,
       'kmRun': kmrun,
       'fare': fare,
       'discount': discount
@@ -126,6 +133,8 @@ class GetDataServices {
     dataResponse['amount'] = amount;
     dataResponse['tapinStationName'] = originStation.stationName;
     dataResponse['tapOutStationName'] = destinationStation.stationName;
+    dataResponse['vehicleNo'] = selectedVehicle.vehicle_no;
+    dataResponse['plateNumber'] = selectedVehicle.plate_no;
     print('kmRun: ${dataResponse['kmrun']}');
     print('fare: ${dataResponse['fare']}');
     print('discount: ${dataResponse['discount']}');
@@ -155,5 +164,18 @@ class GetDataServices {
     );
     print('station.stationName: ${station.stationName}');
     return station.stationName;
+  }
+
+  Future<VehicleModel> getSelectedVehicleInfo() async {
+    VehicleModel vehicle;
+    try {
+      vehicle = dataController.vehicles.firstWhere((vehicle) =>
+          vehicle.id == sessionController.session.value!.vehicleId);
+      print('selected vehicle: ${vehicle.vehicle_no}:${vehicle.plate_no}');
+      return vehicle;
+    } catch (e) {
+      print(e);
+      throw Future.error(e);
+    }
   }
 }

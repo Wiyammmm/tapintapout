@@ -194,7 +194,7 @@ class _HomePageState extends State<HomePage> {
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
                         child: Text(
-                          'Route: ${routeController.selectedRoute.value?.origin}-${routeController.selectedRoute.value?.destination}',
+                          'Route: ${dataController.selectedRoute.value?.origin}-${dataController.selectedRoute.value?.destination}',
                           textAlign: TextAlign.center,
                         ),
                       ),

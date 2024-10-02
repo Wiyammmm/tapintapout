@@ -13,6 +13,8 @@ import 'package:tapintapout/models/session_model.dart';
 import 'package:tapintapout/models/station_model.dart';
 import 'package:tapintapout/models/tapin_model.dart';
 import 'package:tapintapout/models/transaction_model.dart';
+import 'package:tapintapout/models/vehicle_model.dart';
+import 'package:tapintapout/presentation/pages/homePage.dart';
 import 'package:tapintapout/presentation/pages/unsycPage.dart';
 import 'package:tapintapout/routes/app_pages.dart';
 
@@ -55,7 +57,7 @@ class ProcessServices {
           (element.cardId == tagid && element.status == "tapin"))) {
         await tapoutProcess(tagid, response, context, card);
       } else {
-        if (card.balance > routeController.selectedRoute.value!.maximumFare) {
+        if (card.balance > dataController.selectedRoute.value!.maximumFare) {
           await tapinProcess(response, tagid, context);
         } else {
           response['message'] = 'Insufficient Balance';
@@ -141,6 +143,8 @@ class ProcessServices {
         dateTime: getDataServices.getDateTime());
 
     String stationName = await getDataServices.getStationName(tapinStationid);
+    VehicleModel selectedVehicle =
+        await getDataServices.getSelectedVehicleInfo();
     print('tapin station: $stationName');
     TransactionModel transaction = TransactionModel(
         coopId: coopInfoController.coopInfo.value!.id,
@@ -162,7 +166,10 @@ class ProcessServices {
         status: 'tapin',
         maxfare: double.parse(
             coopInfoController.coopInfo.value!.maximumFare.toString()),
-        ticketNumber: ticketNumber);
+        ticketNumber: ticketNumber,
+        vehicleNo: selectedVehicle.vehicle_no,
+        plateNumber: selectedVehicle.plate_no,
+        date: getDataServices.getDateTime());
 
     await hiveService.addTransaction(transaction);
 
@@ -209,9 +216,10 @@ class ProcessServices {
             routeId: sessionBox!.routeId,
             lastStationId: sessionBox.lastStationId,
             targetStationId: sessionBox.targetStationId,
-            isReversed: sessionBox.isReversed);
+            isReversed: sessionBox.isReversed,
+            vehicleId: sessionBox.vehicleId);
 
-        if (!routeController.selectedRoute.value!.routeLoop) {
+        if (!dataController.selectedRoute.value!.routeLoop) {
           if (sessionBox.isReversed) {
             stationList = stationList.reversed.toList();
           }
@@ -288,15 +296,14 @@ class ProcessServices {
 
       Future.delayed(Duration(seconds: 1), () async {
         await deviceInfoService.stopLocation();
-
+        await udpService.closeUDP();
+        NfcManager.instance.stopSession();
         await Hive.deleteFromDisk();
 
         tapinController.tapin.clear();
         sessionController.session.value = null;
         tapoutController.transaction.clear();
 
-        udpService.closeUDP();
-        NfcManager.instance.stopSession();
         Navigator.of(context).pop();
         Get.offAllNamed(Routes.LOGIN);
       });
@@ -307,5 +314,66 @@ class ProcessServices {
     //   context,
     //   MaterialPageRoute(builder: (context) => LoginPage()),
     // );
+  }
+
+  Future<void> selectRouteVehicleProcess(BuildContext context) async {
+    if (dataController.selectedVehicle.value == null) {
+      SweetAlertUtils.showInformationDialog(context,
+          title: 'Missing',
+          thisTitle: 'Please select vehicle first', onConfirm: () {
+        Navigator.of(context).pop();
+      });
+      return;
+    }
+    if (dataController.selectedRoute.value == null) {
+      SweetAlertUtils.showInformationDialog(context,
+          title: 'Missing',
+          thisTitle: 'Please select route first', onConfirm: () {
+        Navigator.of(context).pop();
+      });
+      return;
+    }
+
+    String routeid = dataController.selectedRoute.value!.id;
+    List<StationModel> stations =
+        await stationController.fetchStationsByRouteId(routeid);
+    for (var station in stations) {
+      print('Station ID: ${station.id}');
+      print('Station Name: ${station.stationName}');
+      print('Station Number: ${station.stationNum}');
+      print('Latitude: ${station.lat}');
+      print('Longitude: ${station.long}');
+      print('---');
+    }
+    if (stations.isNotEmpty) {
+      print("stations.first.id: ${stations.first.id}");
+      dataController.getSelectedRoute(routeid);
+      dataController.updateSession(
+          routeid,
+          stations.first.id,
+          stations[1].id.toString(),
+          dataController.selectedVehicle.value!.id.toString());
+      SessionModel? session = await hiveService.getSession();
+      print('Route ID: ${session?.routeId}');
+      print('Last Station ID: ${session?.lastStationId}');
+      print('startget Station ID: ${session?.targetStationId}');
+
+      Get.offAll(() => HomePage());
+    } else {
+      print('empty stations');
+      showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title:
+                Center(child: FittedBox(child: Text('No Stations Registered'))),
+            content: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [Text('Please assist to the admin')],
+            ),
+          );
+        },
+      );
+    }
   }
 }

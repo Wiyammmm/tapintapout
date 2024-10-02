@@ -179,8 +179,10 @@ class HiveService {
         status: 'tapout',
         maxfare: double.parse(
             coopInfoController.coopInfo.value!.maximumFare.toString()),
-        ticketNumber:
-            tapinController.tapin.value[observableIndex].ticketNumber);
+        ticketNumber: tapinController.tapin.value[observableIndex].ticketNumber,
+        vehicleNo: dataUpdate['vehicleNo'],
+        plateNumber: dataUpdate['plateNumber'],
+        date: getDataServices.getDateTime());
 
     await hiveService.addTransaction(transaction);
 

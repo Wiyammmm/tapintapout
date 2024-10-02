@@ -34,13 +34,16 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       status: fields[14] as String,
       maxfare: fields[15] as double,
       ticketNumber: fields[16] as String,
+      vehicleNo: fields[17] as String,
+      plateNumber: fields[18] as String,
+      date: fields[19] as String,
     );
   }
 
   @override
   void write(BinaryWriter writer, TransactionModel obj) {
     writer
-      ..writeByte(17)
+      ..writeByte(20)
       ..writeByte(0)
       ..write(obj.coopId)
       ..writeByte(1)
@@ -74,7 +77,13 @@ class TransactionModelAdapter extends TypeAdapter<TransactionModel> {
       ..writeByte(15)
       ..write(obj.maxfare)
       ..writeByte(16)
-      ..write(obj.ticketNumber);
+      ..write(obj.ticketNumber)
+      ..writeByte(17)
+      ..write(obj.vehicleNo)
+      ..writeByte(18)
+      ..write(obj.plateNumber)
+      ..writeByte(19)
+      ..write(obj.date);
   }
 
   @override

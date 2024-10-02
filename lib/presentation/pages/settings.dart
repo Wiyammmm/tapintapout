@@ -151,6 +151,11 @@ class _SettingsPageState extends State<SettingsPage> {
                     );
                   },
                   child: Text('Sync Data')),
+              // ElevatedButton(
+              //     onPressed: () async {
+              //       await getDataServices.getSelectedVehicleInfo();
+              //     },
+              //     child: Text('test')),
 
               Divider(),
               Text(

@@ -15,7 +15,8 @@ class GeneratorServices {
     String formattedMinutes = minutes.toString().padLeft(2, '0');
     String currentDate =
         "$formattedMonth$formattedDay$formattedYear$formattedHours$formattedMinutes";
-    String ticketNumber = '$currentDate-${tapinController.tapin.length + 1}';
+    String ticketNumber =
+        '${dataController.selectedVehicle.value?.vehicle_no}:${dataController.selectedVehicle.value?.plate_no}-$currentDate-${tapinController.tapin.length + 1}';
     return ticketNumber;
   }
 }

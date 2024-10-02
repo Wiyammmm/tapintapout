@@ -14,11 +14,15 @@ class SessionModel extends HiveObject {
   String targetStationId;
 
   @HiveField(3)
+  String vehicleId;
+
+  @HiveField(4)
   bool isReversed;
 
   SessionModel(
       {required this.routeId,
       required this.lastStationId,
       required this.targetStationId,
+      required this.vehicleId,
       this.isReversed = false});
 }
