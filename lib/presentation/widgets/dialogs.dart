@@ -318,9 +318,11 @@ class DialogUtils {
                   ),
                   PermisionButtonWidget(
                       label: 'Printer',
-                      isPermission: !printerController.connected.value,
+                      // isPermission: !printerController.connected.value,
+                      isPermission: !permissionController.isPrinter.value,
                       onPressed: () async {
-                        await printerController.connectToPrinter();
+                        // await printerController.connectToPrinter();
+                        await permissionController.isSunmiPrinterBind();
                       }),
                   SizedBox(
                     height: 10,

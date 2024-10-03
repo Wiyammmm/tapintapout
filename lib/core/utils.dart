@@ -23,7 +23,7 @@ import 'package:tapintapout/data/hive_service.dart';
 import 'package:tapintapout/presentation/widgets/dialogs.dart';
 
 final myBox = Hive.box('myBox');
-PrintServices printServices = PrintServices();
+PrintServices printServices = Get.put(PrintServices());
 FlutterTts flutterTts = FlutterTts();
 ApiServices apiServices = ApiServices();
 GeneratorServices generatorServices = GeneratorServices();

@@ -35,6 +35,7 @@ class _HomePageState extends State<HomePage> {
     _checkNfcAndStartSession();
     _connectToPrinter();
     _askPermission();
+    // deviceInfoService.sunmiScannerListener();
     if (!udpService.isConnected.value) {
       udpService.initializeUDP();
     }
@@ -82,34 +83,19 @@ class _HomePageState extends State<HomePage> {
 
   void _connectToPrinter() async {
     try {
-      final resultprinter = await connectToPrinter.connectToPrinter();
+      // final resultprinter = await connectToPrinter.connectToPrinter();
 
-      if (resultprinter != null) {
-        print('resultprinter: $resultprinter');
-        if (resultprinter) {
-        } else {
-          ArtDialogResponse response = await ArtSweetAlert.show(
-              context: context,
-              artDialogArgs: ArtDialogArgs(
-                  type: ArtSweetAlertType.danger,
-                  title: "Can't connect to printer",
-                  text: "Open Bluetooth to automatically connect"));
-          print('response: $response');
-          if (response.isTapConfirmButton) {
-            // _connectToPrinter();
-          }
-        }
-      } else {
+      if (!permissionController.isPrinter.value) {
         ArtDialogResponse response = await ArtSweetAlert.show(
             context: context,
             artDialogArgs: ArtDialogArgs(
                 type: ArtSweetAlertType.danger,
                 title: "Can't connect to printer",
-                text: "Open Bluetooth to automatically connect"));
-        print('else resultprinter: $resultprinter');
+                text: "Please check the cover"));
         print('response: $response');
         if (response.isTapConfirmButton) {
           // _connectToPrinter();
+          permissionController.isSunmiPrinterBind();
         }
       }
     } catch (e) {
@@ -247,6 +233,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                             GestureDetector(
                               onTap: () {
+                                // Get.off(TransactionPage());
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(

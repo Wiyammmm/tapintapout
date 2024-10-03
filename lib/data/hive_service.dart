@@ -196,6 +196,9 @@ class HiveService {
       'kmrun': double.parse(dataUpdate['kmrun'].toString()).toStringAsFixed(2),
       'origin': tapinController.tapin.value[observableIndex].origin,
       'destination': tapinController.tapin.value[observableIndex].destination,
+      'date': tapinController.tapin.value[observableIndex].dateTime,
+      'vehicleNo': dataUpdate['vehicleNo'],
+      'plateNumber': dataUpdate['plateNumber']
     });
     // } catch (e) {
     //   print('updateTapin no found: $e');
@@ -259,7 +262,7 @@ class HiveService {
   }
 
   Future<void> clearTransaction() async {
-    var box = await Hive.openBox<TransactionModel>('transaction');
+    var box = await Hive.openBox<TapinModel>('transaction');
     await box.clear();
     tapoutController.transaction.clear();
   }

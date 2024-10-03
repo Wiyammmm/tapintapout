@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
@@ -7,6 +8,8 @@ import 'package:get/get.dart';
 import 'package:simnumber/sim_number.dart';
 
 import 'package:simnumber/siminfo.dart';
+import 'package:sunmi_scanner/sunmi_scanner.dart';
+import 'package:tapintapout/core/sweetalert.dart';
 // import 'package:location/location.dart';
 import 'package:tapintapout/core/utils.dart';
 import 'package:tapintapout/models/transaction_model.dart';
@@ -21,6 +24,8 @@ class DeviceInfoService extends GetxService {
   bool isSendingTransaction = false;
   var lat = ''.obs;
   var long = ''.obs;
+  var isSunmiScanner = false.obs;
+  late StreamSubscription<String> barcodeSubscription;
   Future<String> getDeviceSerialNumber() async {
     // String? identifier;
     String value = '';
@@ -200,5 +205,30 @@ class DeviceInfoService extends GetxService {
   Future<void> stopLocation() async {
     positionStream?.cancel();
     positionStream = null;
+  }
+
+  Future<void> getIfSunmiScanner() async {
+    isSunmiScanner.value = await SunmiScanner.isScannerAvailable();
+    if (isSunmiScanner.value) {
+      sunmiScannerListener();
+    }
+  }
+
+  Future<void> turnoffSunmiScanner() async {
+    SunmiScanner.stop();
+    barcodeSubscription.cancel();
+    isSunmiScanner.value = false;
+  }
+
+  void sunmiScannerListener() async {
+    if (isSunmiScanner.value) {
+      barcodeSubscription = SunmiScanner.onBarcodeScanned().listen((event) {
+        print('code: $event');
+        SweetAlertUtils.showInformationDialog(Get.context!,
+            title: 'Code', thisTitle: 'value: $event', onConfirm: () {
+          Navigator.of(Get.context!).pop();
+        });
+      });
+    }
   }
 }

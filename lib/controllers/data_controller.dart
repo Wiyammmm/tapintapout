@@ -37,7 +37,6 @@ class DataController extends GetxService {
   // }
 
   Future<void> initializedData() async {
-    // await updateFilipayCard();
     Get.put(PermissionController());
     List<FilipayCardModel> filipaycards = await hiveService.getFilipayCards();
     filipayCards.value = filipaycards;
@@ -65,9 +64,13 @@ class DataController extends GetxService {
 
     tapoutController.transaction.value = await hiveService.getTransaction();
     tapoutController.transaction.refresh();
-
-    if (dataController.selectedRoute.value == null) {
-      dataController.fetchAndStoreData();
+    if (dataController.filipayCards.isNotEmpty &&
+        tapinController.tapin.isNotEmpty) {
+      if (selectedRoute.value == null) {
+        fetchAndStoreData();
+      } else {
+        updateFilipayCard();
+      }
     }
   }
 
@@ -76,7 +79,7 @@ class DataController extends GetxService {
     errorPrompt.clear();
     try {
       print('filipay card is empty');
-      int indexProgress = 0;
+
       List<String> progressTextList = [
         'fetching Routes',
         'fetching Stations',

@@ -6,7 +6,8 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:nearby_connections/nearby_connections.dart';
+import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
+import 'package:sunmi_scanner/sunmi_scanner.dart';
 import 'package:tapintapout/backend/printer/printerController.dart';
 import 'package:tapintapout/backend/services/udp_services.dart';
 import 'package:tapintapout/core/sweetalert.dart';
@@ -157,24 +158,52 @@ class _SettingsPageState extends State<SettingsPage> {
               //     },
               //     child: Text('test')),
 
+              // Divider(),
+              // Text(
+              //     'Printer Status: ${printerController.connected.value ? 'Connected' : 'Disconnected'}'),
+              // ElevatedButton(
+              //     onPressed: () {
+              //       printerController.connected.value
+              //           ? printerController.disconnectFromPrinter()
+              //           : printerController.connectToPrinter();
+              //     },
+              //     child: Text(printerController.connected.value
+              //         ? 'Disconnect to Printer'
+              //         : 'Connect to Printer')),
+              // // if (printerController.connected.value)
+              // ElevatedButton(
+              //     onPressed: () {
+              //       printServices.sample();
+              //     },
+              //     child: Text('Test Print')),
               Divider(),
+              Text('Sunmi Printer'),
               Text(
-                  'Printer Status: ${printerController.connected.value ? 'Connected' : 'Disconnected'}'),
+                  'Status: ${permissionController.isPrinter.value ? 'Conected' : 'Disconnected'}'),
               ElevatedButton(
-                  onPressed: () {
-                    printerController.connected.value
-                        ? printerController.disconnectFromPrinter()
-                        : printerController.connectToPrinter();
+                  onPressed: () async {
+                    await permissionController.isSunmiPrinterBind();
                   },
-                  child: Text(printerController.connected.value
-                      ? 'Disconnect to Printer'
-                      : 'Connect to Printer')),
-              // if (printerController.connected.value)
+                  child: Text(permissionController.isPrinter.value
+                      ? 'Connected'
+                      : 'Connect')),
+
               ElevatedButton(
-                  onPressed: () {
-                    printServices.sample();
+                  onPressed: () async {
+                    await printServices.sunmiSample();
                   },
                   child: Text('Test Print')),
+
+              ElevatedButton(
+                  onPressed: () async {
+                    if (deviceInfoService.isSunmiScanner.value) {
+                      await deviceInfoService.turnoffSunmiScanner();
+                    } else {
+                      await deviceInfoService.getIfSunmiScanner();
+                    }
+                  },
+                  child: Text(
+                      'Turn ${deviceInfoService.isSunmiScanner.value ? 'Off' : 'On'} Scanner')),
               Divider(),
               Text(
                   'UDP Status: ${udpService.isConnected.value ? 'Connected' : 'Disconnected'}'),

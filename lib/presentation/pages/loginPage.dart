@@ -58,7 +58,8 @@ class LoginPage extends StatelessWidget {
       bool isLocationPermission =
           permissionController.locationPermission.value ==
               LocationPermission.denied;
-      bool isBluetoothPermission = printerController.connected.value;
+      bool? isBluetoothPermission = permissionController.isPrinter.value;
+
       bool isStoragePermission = permissionController.storagePermission.value ==
           PermissionStatus.denied;
       print('isBluetoothPermission: $isBluetoothPermission');

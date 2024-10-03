@@ -55,14 +55,17 @@ class ApiProvider {
           });
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
-
+        print('route data: ${data}');
         // Check if the expected 'response' field is present
         if (data.containsKey('response')) {
           return data['response'];
         } else {
+          print('Invalid response format');
           throw Exception('Invalid response format');
         }
       } else {
+        print(
+            'Failed to load routes: ${response.statusCode} ${response.reasonPhrase}');
         // Handle HTTP error responses
         throw Exception(
             'Failed to load routes: ${response.statusCode} ${response.reasonPhrase}');
