@@ -62,6 +62,12 @@ class TransactionModel extends HiveObject {
   String plateNumber;
 
   @HiveField(19)
+  String routeId;
+
+  @HiveField(20)
+  String driverId;
+
+  @HiveField(21)
   String date;
 
   TransactionModel(
@@ -84,5 +90,7 @@ class TransactionModel extends HiveObject {
       required this.ticketNumber,
       required this.vehicleNo,
       required this.plateNumber,
+      required this.routeId,
+      required this.driverId,
       required this.date});
 }

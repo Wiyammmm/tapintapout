@@ -1,5 +1,5 @@
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import 'package:blue_thermal_printer/blue_thermal_printer.dart' as blue;
+// import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+// import 'package:blue_thermal_printer/blue_thermal_printer.dart' as blue;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
@@ -7,6 +7,7 @@ import 'package:sunmi_printer_plus/column_maker.dart';
 import 'package:sunmi_printer_plus/enums.dart';
 import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
 import 'package:tapintapout/core/utils.dart';
+import 'package:telpo_flutter_sdk/telpo_flutter_sdk.dart';
 
 class PrintServices extends GetxService {
   int fontSize = 23;
@@ -25,6 +26,23 @@ class PrintServices extends GetxService {
   //     }
   //   });
   // }
+
+  telpoSample() async {
+    final telpoFlutterChannel = TelpoFlutterChannel();
+    bool isPrintProceedResult = await printerController.isTelpoPrintProceed();
+    final coopData = coopInfoController.coopInfo.value;
+    if (isPrintProceedResult) {
+      final sheet = TelpoPrintSheet();
+
+      sheet.addElements([
+        printdata(breakString("${coopData?.cooperativeName}", 24), 1),
+        printdata("POWERED BY: FILIPAY", 1),
+        // printdata("P P P P P P P P P P P P P P P P P P P P P P P", 0), //45
+        PrintData.space(line: 12)
+      ]);
+      final PrintResult result = await telpoFlutterChannel.print(sheet);
+    }
+  }
 
   sunmiSample() async {
     await SunmiPrinter.startTransactionPrint(true);
@@ -55,6 +73,44 @@ class PrintServices extends GetxService {
   }
 
   printTransactionReceipt(Map<String, dynamic> item) async {
+    if (deviceInfoService.deviceModel.value == "V2s_STGL") {
+      await SunmiPrintTransactionReceipt(item);
+    } else if (deviceInfoService.deviceModel.value == "TPS320") {
+      await telpoPrintTransactionReceipt(item);
+    }
+  }
+
+  Future<void> telpoPrintTransactionReceipt(Map<String, dynamic> item) async {
+    final telpoFlutterChannel = TelpoFlutterChannel();
+    bool isPrintProceedResult = await printerController.isTelpoPrintProceed();
+    if (isPrintProceedResult) {
+      final sheet = TelpoPrintSheet();
+      sheet.addElements([
+        printdata(
+            breakString(
+                "${coopInfoController.coopInfo.value!.cooperativeName}", 24),
+            1),
+        printdata("POWERED BY: FILIPAY", 1),
+        printdata("TICKET#: ${newText('${item['ticketNumber']}')}", 0),
+        printdata("DATE:    ${newText('${item['date']}', 36)}", 0),
+        printdata("FARE:    ${newText('${item['fare']}', 50)}", 0),
+        printdata("DISCOUNT:${newText('${item['discount']}', 45)}", 0),
+        printdata("TOTAL AMOUNT", 1, 3),
+        printdata("${item['amount']}", 1, 3),
+        printdata("- - - - - - - - - - - - - - - -", 1),
+        printdata("PLATE#:  ${newText('${item['plateNumber']}', 50)}", 0),
+        printdata("KM RUN:  ${newText('${item['kmrun']}', 50)}", 0),
+        printdata("ORIGIN:  ${newText('${item['origin']}', 45)}", 0),
+        printdata("DESTINATION:${newText('${item['destination']}', 36)}", 0),
+        printdata("- - - - - - - - - - - - - - - -", 1),
+        printdata("NOT AN OFFICIAL RECEIPT", 1),
+        PrintData.space(line: 12)
+      ]);
+      final PrintResult result = await telpoFlutterChannel.print(sheet);
+    }
+  }
+
+  Future<void> SunmiPrintTransactionReceipt(Map<String, dynamic> item) async {
     if (permissionController.isPrinter.value) {
       await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER); // Center align
       await SunmiPrinter.bold();
@@ -183,5 +239,21 @@ class PrintServices extends GetxService {
       return text.padLeft(maxright);
     }
     return text;
+  }
+
+  PrintData printdata(String text, int align, [int size = 1]) {
+    return PrintData.text(text,
+        alignment: align == 0
+            ? PrintAlignment.left
+            : align == 1
+                ? PrintAlignment.center
+                : PrintAlignment.right,
+        fontSize: size == 1
+            ? PrintedFontSize.size18
+            : size == 2
+                ? PrintedFontSize.size24
+                : size == 3
+                    ? PrintedFontSize.size34
+                    : PrintedFontSize.size44);
   }
 }

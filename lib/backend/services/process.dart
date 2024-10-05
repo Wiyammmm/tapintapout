@@ -169,6 +169,8 @@ class ProcessServices {
         ticketNumber: ticketNumber,
         vehicleNo: selectedVehicle.vehicle_no,
         plateNumber: selectedVehicle.plate_no,
+        routeId: sessionController.session.value!.routeId,
+        driverId: userInfoController.userInfo.value!.id,
         date: getDataServices.getDateTime());
 
     await hiveService.addTransaction(transaction);
@@ -298,6 +300,7 @@ class ProcessServices {
         await deviceInfoService.stopLocation();
         await udpService.closeUDP();
         NfcManager.instance.stopSession();
+        await deviceInfoService.turnoffSunmiScanner();
         await Hive.deleteFromDisk();
 
         tapinController.tapin.clear();

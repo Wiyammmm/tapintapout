@@ -22,9 +22,7 @@ class GetDataServices {
       // }
 
       StationModel station;
-      station = stationController.filteredStation
-          .where((station) => station.id == stationId)
-          .first;
+      station = stationList.where((station) => station.id == stationId).first;
       if (station != null) {
         origin = station.stationName;
         print('origin: $origin');
@@ -46,6 +44,9 @@ class GetDataServices {
 
   Future<Map<String, dynamic>> tapinUpdate(String originStationId,
       String destinationStationId, String cardid) async {
+    print('tapinUpdate originStationId: $originStationId');
+    print('tapinUpdate destinationStationId: $destinationStationId');
+    print('tapinUpdate cardid: $cardid');
     Map<String, dynamic> dataResponse = {
       'kmrun': 0,
       'fare': dataController.selectedRoute.value!.maximumFare,

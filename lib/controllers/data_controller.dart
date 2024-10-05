@@ -37,6 +37,8 @@ class DataController extends GetxService {
   // }
 
   Future<void> initializedData() async {
+    await deviceInfoService.getDeviceModel();
+    await deviceInfoService.getDeviceSerialNumber();
     Get.put(PermissionController());
     List<FilipayCardModel> filipaycards = await hiveService.getFilipayCards();
     filipayCards.value = filipaycards;
@@ -48,6 +50,8 @@ class DataController extends GetxService {
 
     tapinController.tapin.value = await hiveService.getTapin();
     sessionController.session.value = await hiveService.getSession();
+    print(
+        'sessionController.session.value:${sessionController.session.value?.routeId}');
 
     if (sessionController.session.value != null) {
       getSelectedRoute(sessionController.session.value!.routeId);
@@ -281,7 +285,7 @@ class DataController extends GetxService {
     print('updateFilipayCard called');
     try {
       final filipayCardResponse = await apiProvider.fetchFilipayCards();
-      List<FilipayCardModel> filipayCardsList = (filipayCardResponse as List)
+      List<FilipayCardModel> filipayCardsList = filipayCardResponse
           .map((data) => FilipayCardModel(
               id: data['_id'],
               cardID: data['cardID'],
@@ -291,7 +295,7 @@ class DataController extends GetxService {
           .toList();
 
       await hiveService.storeFilipayCards(filipayCardsList);
-      if (filipayCardsList.isNotEmpty && filipayCardsList != null) {
+      if (filipayCardsList.isNotEmpty) {
         filipayCards.value = filipayCardsList;
         filipayCards.refresh();
       }

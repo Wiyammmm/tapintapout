@@ -54,174 +54,205 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BasePage(child: Obx(() {
-      bool isLocationPermission =
-          permissionController.locationPermission.value ==
-              LocationPermission.denied;
-      bool? isBluetoothPermission = permissionController.isPrinter.value;
+    return WillPopScope(
+      onWillPop: () async {
+        return false;
+      },
+      child: BasePage(child: Obx(() {
+        bool isLocationPermission =
+            permissionController.locationPermission.value ==
+                LocationPermission.denied;
 
-      bool isStoragePermission = permissionController.storagePermission.value ==
-          PermissionStatus.denied;
-      print('isBluetoothPermission: $isBluetoothPermission');
-      if (isLocationPermission ||
-          !isBluetoothPermission ||
-          isStoragePermission) {
-        print(
-            'permissionController.locationPermission.value: ${permissionController.locationPermission.value}');
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          dialogUtils.showPermissionDialogs(context);
-        });
-      }
+        bool? isBluetoothPermission = permissionController.isPrinter.value;
 
-      if (authController.isLoading.value) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          showDialog<void>(
-            context: context,
-            barrierDismissible: false,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Center(child: Text('Logging in')),
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Text('Please wait...')],
-                ),
-              );
-            },
-          );
-        });
-      } else {
-        // Hide the dialog if isLoading becomes false
-        if (Navigator.canPop(context)) {
+        bool isStoragePermission =
+            permissionController.storagePermission.value ==
+                PermissionStatus.denied;
+        print('isBluetoothPermission: $isBluetoothPermission');
+        print('isLocationPermission: $isLocationPermission');
+        print('isStoragePermission: $isStoragePermission');
+        if (isLocationPermission ||
+            !isBluetoothPermission ||
+            isStoragePermission) {
+          if (Navigator.canPop(context)) {
+            print('navigator pop?');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pop(context);
+              print('navigator yes pop');
+            });
+          }
+          print(
+              'permissionController.locationPermission.value: ${permissionController.locationPermission.value}');
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pop(context);
+            dialogUtils.showPermissionDialogs(context);
+          });
+        }else{
+              if (Navigator.canPop(context)) {
+            print('navigator pop?');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pop(context);
+              print('navigator yes pop');
+            });
+          }
+        }
+
+        if (authController.isLoading.value) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            showDialog<void>(
+              context: context,
+              barrierDismissible: false,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Center(child: Text('Logging in')),
+                  content: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [Text('Please wait...')],
+                  ),
+                );
+              },
+            );
           });
         }
-      }
+        // else {
+        //   // Hide the dialog if isLoading becomes false
+        //   if (Navigator.canPop(context)) {
+        //     WidgetsBinding.instance.addPostFrameCallback((_) {
+        //       Navigator.pop(context);
+        //     });
+        //   }
+        // }
 
-      if (authController.errorPrompt.isNotEmpty) {
-        if (Navigator.canPop(context)) {
+        if (authController.errorPrompt.isNotEmpty) {
+          print('error prompt: ${authController.errorPrompt.value}');
+          if (Navigator.canPop(context)) {
+            print('navigator pop?');
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              Navigator.pop(context);
+              print('navigator yes pop');
+            });
+          }
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.pop(context);
+            showDialog<void>(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  title: Center(
+                      child: FittedBox(
+                          child:
+                              Text('${authController.errorPrompt['title']}'))),
+                  content: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [Text('${authController.errorPrompt['label']}')],
+                  ),
+                );
+              },
+            ).then((value) {
+              authController.errorPrompt.clear();
+              print('error prompt clear: ${authController.errorPrompt.value}');
+            });
           });
         }
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          showDialog<void>(
-            context: context,
-            builder: (BuildContext context) {
-              return AlertDialog(
-                title: Center(
-                    child: FittedBox(
-                        child: Text('${authController.errorPrompt['title']}'))),
-                content: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [Text('${authController.errorPrompt['label']}')],
-                ),
-              );
-            },
-          ).then((value) {
-            authController.errorPrompt.clear();
-          });
-        });
-      }
 
-      return Stack(
-        children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Image.asset(
-              'assets/bg red-blue.png',
-              fit: BoxFit.cover,
-              // Adjust the height as needed
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/filipaylogo.png',
-                    width: MediaQuery.of(context).size.width * 0.5,
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: SizedBox(
-                      width: MediaQuery.of(context).size.width,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Email',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                          TextFormField(
-                            controller: emailController,
-                            validator: _emailValidator,
-                          ),
-                          const Text(
-                            'Password',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                          TextFormField(
-                              controller: passwordController,
-                              obscureText:
-                                  passwordControllerGetX.isObscured.value,
-                              decoration: InputDecoration(
-                                suffixIcon: Obx(() => IconButton(
-                                      icon: Icon(
-                                        passwordControllerGetX.isObscured.value
-                                            ? Icons.visibility
-                                            : Icons.visibility_off,
-                                      ),
-                                      onPressed: () {
-                                        passwordControllerGetX.isObscured
-                                            .toggle(); // Toggle visibility
-                                      },
-                                    )),
-                              ),
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Please enter your password';
-                                }
-                                return null;
-                              }),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(
-                    height: 20,
-                  ),
-                  SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.4,
-                      height: 50,
-                      child: ElevatedButton(
-                          onPressed: () => _submitForm(context),
-
-                          // {
-
-                          //   // Navigator.pushReplacement(
-                          //   //   context,
-                          //   //   MaterialPageRoute(
-                          //   //       builder: (context) => SelectRoutePage()),
-                          //   // );
-                          // },
-                          child: const Text(
-                            'LOG IN',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          )))
-                ],
+        return Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Image.asset(
+                'assets/bg red-blue.png',
+                fit: BoxFit.cover,
+                // Adjust the height as needed
               ),
             ),
-          ),
-        ],
-      );
-    }));
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Image.asset(
+                      'assets/filipaylogo.png',
+                      width: MediaQuery.of(context).size.width * 0.5,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Email',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                            TextFormField(
+                              controller: emailController,
+                              validator: _emailValidator,
+                            ),
+                            const Text(
+                              'Password',
+                              style: TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.bold),
+                            ),
+                            TextFormField(
+                                controller: passwordController,
+                                obscureText:
+                                    passwordControllerGetX.isObscured.value,
+                                decoration: InputDecoration(
+                                  suffixIcon: Obx(() => IconButton(
+                                        icon: Icon(
+                                          passwordControllerGetX
+                                                  .isObscured.value
+                                              ? Icons.visibility
+                                              : Icons.visibility_off,
+                                        ),
+                                        onPressed: () {
+                                          passwordControllerGetX.isObscured
+                                              .toggle(); // Toggle visibility
+                                        },
+                                      )),
+                                ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter your password';
+                                  }
+                                  return null;
+                                }),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.4,
+                        height: 50,
+                        child: ElevatedButton(
+                            onPressed: () => _submitForm(context),
+
+                            // {
+
+                            //   // Navigator.pushReplacement(
+                            //   //   context,
+                            //   //   MaterialPageRoute(
+                            //   //       builder: (context) => SelectRoutePage()),
+                            //   // );
+                            // },
+                            child: const Text(
+                              'LOG IN',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            )))
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      })),
+    );
   }
 }

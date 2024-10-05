@@ -19,9 +19,9 @@ class StationController extends GetxService {
   // }
 
   Future<List<StationModel>> fetchStationsByRouteId(String routeId) async {
-    var allStations = await Hive.openBox<StationModel>('stations');
+    var allStations = await hiveService.getStations();
 
-    var filteredStations = allStations.values
+    var filteredStations = allStations
         .where((station) => station.routeId == routeId)
         .toList()
       ..sort((a, b) => a.stationNum.compareTo(b.stationNum));

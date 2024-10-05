@@ -16,8 +16,9 @@ class AuthController extends GetxService {
     var response;
     isLoading(true);
     try {
-      String deviceId = await deviceInfoService.getDeviceSerialNumber();
-      response = await apiProvider.login(email, password, deviceId);
+      // String deviceId = await deviceInfoService.getDeviceSerialNumber();
+      response = await apiProvider.login(
+          email, password, deviceInfoService.serialNumber.value);
       print('response: $response');
       isLoading(false);
       if (response['messages']['code'] != 0) {
@@ -30,6 +31,7 @@ class AuthController extends GetxService {
         var userinfo = response['response']['userInfo'];
         var coopinfo = response['response']['coopInfo'];
         UserInfoModel userInfoModel = UserInfoModel(
+            id: userinfo['_id'],
             firstName: userinfo['firstName'],
             lastName: userinfo['lastName'],
             email: userinfo['email'],

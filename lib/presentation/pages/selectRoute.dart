@@ -110,7 +110,7 @@ class SelectRoutePage extends StatelessWidget {
                                           contentPadding: EdgeInsets.symmetric(
                                               vertical: 15, horizontal: 10)),
                                       onChanged: (query) =>
-                                          dataController.filterRoutes(query),
+                                          dataController.filterVehicles(query),
                                     )),
                                 Container(
                                   constraints: BoxConstraints(
@@ -119,6 +119,11 @@ class SelectRoutePage extends StatelessWidget {
                                               0.25,
                                       minHeight: 0),
                                   child: Obx(() {
+                                    if (dataController
+                                        .filteredVehicles.isEmpty) {
+                                      return Center(
+                                          child: Text('No vehicle found'));
+                                    }
                                     return ScrollbarTheme(
                                       data: ScrollbarThemeData(
                                         thumbColor: MaterialStateProperty.all(Colors
@@ -149,6 +154,7 @@ class SelectRoutePage extends StatelessWidget {
                                             bool isActive = dataController
                                                     .selectedVehicle.value ==
                                                 vehicle;
+
                                             return ListTile(
                                               title: Container(
                                                 height: 50,

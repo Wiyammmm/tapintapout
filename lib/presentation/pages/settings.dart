@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
 
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
+// import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
@@ -133,25 +133,34 @@ class _SettingsPageState extends State<SettingsPage> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [],
               ),
-              Text('Data'),
-              ElevatedButton(
-                  onPressed: () {
-                    SweetAlertUtils.showConfirmationDialog(context,
-                        onConfirm: () {
-                      Navigator.of(context).pop();
-                      dialogUtils.showFetchingDataDialog(context);
-                    }, thisTitle: 'Do you want to re-fetch the data?');
-                  },
-                  child: Text('Re-fetch data')),
+              const Text(
+                'DATA',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: ElevatedButton(
+                    onPressed: () {
+                      SweetAlertUtils.showConfirmationDialog(context,
+                          onConfirm: () {
+                        Navigator.of(context).pop();
+                        dialogUtils.showFetchingDataDialog(context);
+                      }, thisTitle: 'Do you want to re-fetch the data?');
+                    },
+                    child: Text('Re-fetch data')),
+              ),
 
-              ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (context) => UnsyncPage()),
-                    );
-                  },
-                  child: Text('Sync Data')),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => UnsyncPage()),
+                      );
+                    },
+                    child: Text('Sync Data')),
+              ),
               // ElevatedButton(
               //     onPressed: () async {
               //       await getDataServices.getSelectedVehicleInfo();
@@ -177,66 +186,146 @@ class _SettingsPageState extends State<SettingsPage> {
               //     },
               //     child: Text('Test Print')),
               Divider(),
-              Text('Sunmi Printer'),
-              Text(
-                  'Status: ${permissionController.isPrinter.value ? 'Conected' : 'Disconnected'}'),
-              ElevatedButton(
-                  onPressed: () async {
-                    await permissionController.isSunmiPrinterBind();
-                  },
-                  child: Text(permissionController.isPrinter.value
-                      ? 'Connected'
-                      : 'Connect')),
-
-              ElevatedButton(
-                  onPressed: () async {
-                    await printServices.sunmiSample();
-                  },
-                  child: Text('Test Print')),
-
-              ElevatedButton(
-                  onPressed: () async {
-                    if (deviceInfoService.isSunmiScanner.value) {
-                      await deviceInfoService.turnoffSunmiScanner();
-                    } else {
-                      await deviceInfoService.getIfSunmiScanner();
-                    }
-                  },
-                  child: Text(
-                      'Turn ${deviceInfoService.isSunmiScanner.value ? 'Off' : 'On'} Scanner')),
-              Divider(),
-              Text(
-                  'UDP Status: ${udpService.isConnected.value ? 'Connected' : 'Disconnected'}'),
-              Text(
-                  'TPS 530 status: ${udpService.tps530IP.value == '' ? 'Disconnected' : 'Connected'}'),
-              if (!udpService.isConnected.value)
-                ElevatedButton(
-                    onPressed: () {
-                      connectUDP();
+              const Text(
+                'PRINTER',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('Status: '),
+                  Text(
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: permissionController.isPrinter.value
+                              ? Colors.green
+                              : Colors.red),
+                      '${permissionController.isPrinter.value ? 'Connected' : 'Disconnected'}'),
+                ],
+              ),
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor: permissionController.isPrinter.value
+                            ? MaterialStateProperty.all(Colors.green)
+                            : MaterialStateProperty.all(Colors.blueAccent)),
+                    onPressed: () async {
+                      if (deviceInfoService.deviceModel.value == "V2s_STGL") {
+                        await permissionController.isSunmiPrinterBind();
+                      } else if (deviceInfoService.deviceModel.value ==
+                          "TPS320") {
+                        await printerController.isTelpoPrintProceed();
+                      }
                     },
-                    child: Text('Connect UDP')),
+                    child: Text(permissionController.isPrinter.value
+                        ? 'Connected'
+                        : 'Connect')),
+              ),
+
+              SizedBox(
+                width: MediaQuery.of(context).size.width * 0.9,
+                child: ElevatedButton(
+                    onPressed: () async {
+                      if (deviceInfoService.deviceModel.value == "V2s_STGL") {
+                        await printServices.sunmiSample();
+                      } else if (deviceInfoService.deviceModel.value ==
+                          "TPS320") {
+                        await printServices.telpoSample();
+                      }
+                    },
+                    child: Text('Test Print')),
+              ),
+              if (deviceInfoService.deviceModel.value == "V2s_STGL")
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: ElevatedButton(
+                      style: ButtonStyle(
+                          backgroundColor: deviceInfoService
+                                  .isSunmiScanner.value
+                              ? MaterialStateProperty.all(Colors.red)
+                              : MaterialStateProperty.all(Colors.blueAccent)),
+                      onPressed: () async {
+                        if (deviceInfoService.isSunmiScanner.value) {
+                          await deviceInfoService.turnoffSunmiScanner();
+                        } else {
+                          await deviceInfoService.getIfSunmiScanner();
+                        }
+                      },
+                      child: Text(
+                          'Turn ${deviceInfoService.isSunmiScanner.value ? 'Off' : 'On'} Scanner')),
+                ),
+              Divider(),
+              const Text(
+                'MIRRORING',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('UDP Status: '),
+                  Text(
+                      style: TextStyle(
+                          color: udpService.isConnected.value
+                              ? Colors.green
+                              : Colors.red,
+                          fontWeight: FontWeight.bold),
+                      '${udpService.isConnected.value ? 'Connected' : 'Disconnected'}'),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('TPS 530 status: '),
+                  Text(
+                      style: TextStyle(
+                          color: udpService.tps530IP.value == ''
+                              ? Colors.red
+                              : Colors.green,
+                          fontWeight: FontWeight.bold),
+                      '${udpService.tps530IP.value == '' ? 'Disconnected' : 'Connected'}'),
+                ],
+              ),
+              if (!udpService.isConnected.value)
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: ElevatedButton(
+                      onPressed: () {
+                        connectUDP();
+                      },
+                      child: Text('Connect UDP')),
+                ),
               if (udpService.isConnected.value) ...[
                 if (udpService.tps530IP.value != '')
-                  ElevatedButton(
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width * 0.9,
+                    child: ElevatedButton(
+                        onPressed: () {
+                          sendMessage("hello from sunmi");
+                        },
+                        child: Text('Send Message')),
+                  ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: ElevatedButton(
                       onPressed: () {
-                        sendMessage("hello from sunmi");
-                      },
-                      child: Text('Send Message')),
-                ElevatedButton(
-                    onPressed: () {
-                      Map<String, dynamic> coopdata = {
-                        "cooperativeName": "SERVICE ECONOMY APPLICATION INC.",
-                        "cooperativeCodeName": "SEAPPS",
-                      };
+                        Map<String, dynamic> coopdata = {
+                          "cooperativeName": "SERVICE ECONOMY APPLICATION INC.",
+                          "cooperativeCodeName": "SEAPPS",
+                        };
 
-                      sendMessage("coopData: ${coopdata.toString()}");
-                    },
-                    child: Text('Send Data')),
-                ElevatedButton(
-                    onPressed: () {
-                      closeUDP();
-                    },
-                    child: Text('Close UDP')),
+                        sendMessage("coopData: ${coopdata.toString()}");
+                      },
+                      child: Text('Send Data')),
+                ),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.9,
+                  child: ElevatedButton(
+                      onPressed: () {
+                        closeUDP();
+                      },
+                      child: Text('Close UDP')),
+                ),
                 Expanded(
                   child: ListView.builder(
                     itemCount: udpService.messages.length,

@@ -13,6 +13,7 @@ import 'package:tapintapout/core/sweetalert.dart';
 // import 'package:location/location.dart';
 import 'package:tapintapout/core/utils.dart';
 import 'package:tapintapout/models/transaction_model.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class DeviceInfoService extends GetxService {
   static const platform = const MethodChannel("com.flutter.epic/epic");
@@ -22,11 +23,20 @@ class DeviceInfoService extends GetxService {
   // StreamSubscription<LocationData>? locationSubscription;
   bool isfetchingFilipayCard = false;
   bool isSendingTransaction = false;
+  var deviceModel = "".obs;
   var lat = ''.obs;
   var long = ''.obs;
   var isSunmiScanner = false.obs;
   late StreamSubscription<String> barcodeSubscription;
-  Future<String> getDeviceSerialNumber() async {
+  var serialNumber = "".obs;
+  Future<void> getDeviceModel() async {
+    DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+    AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
+    deviceModel.value = androidInfo.model.toString();
+    print('deviceModel.value: ${deviceModel.value}');
+  }
+
+  Future<void> getDeviceSerialNumber() async {
     // String? identifier;
     String value = '';
     // Map<String, dynamic> allInfo = {};
@@ -34,6 +44,7 @@ class DeviceInfoService extends GetxService {
       // final status = await Permission.phone.request();
       // if (status.isGranted) {
       value = await platform.invokeMethod("Printy");
+
 //         identifier = await UniqueIdentifier.serial;
 // //      DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
 // // AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
@@ -49,8 +60,8 @@ class DeviceInfoService extends GetxService {
       // Handle errors or exceptions here
       print('Error getting device information: $e');
     }
-
-    return value;
+    serialNumber.value = value;
+    print('serialNumber.value: $serialNumber');
   }
 
   Future<String> getMobileNumber() async {
@@ -160,6 +171,8 @@ class DeviceInfoService extends GetxService {
                 "ticketNumber": "${element.ticketNumber}",
                 "vehicleNo": "${element.vehicleNo}",
                 "plateNumber": "${element.plateNumber}",
+                "routeId": "${element.routeId}",
+                "driverId": "${element.driverId}",
                 "date": "${element.date}"
               };
               final sendTransactionResponse =
@@ -215,15 +228,23 @@ class DeviceInfoService extends GetxService {
   }
 
   Future<void> turnoffSunmiScanner() async {
-    SunmiScanner.stop();
-    barcodeSubscription.cancel();
-    isSunmiScanner.value = false;
+    if (isSunmiScanner.value) {
+      SunmiScanner.stop();
+      barcodeSubscription.cancel();
+      isSunmiScanner.value = false;
+    }
   }
 
   void sunmiScannerListener() async {
     if (isSunmiScanner.value) {
       barcodeSubscription = SunmiScanner.onBarcodeScanned().listen((event) {
         print('code: $event');
+        if (Navigator.canPop(Get.context!)) {
+          print('navigator pop?');
+
+          Navigator.pop(Get.context!);
+          print('navigator yes pop');
+        }
         SweetAlertUtils.showInformationDialog(Get.context!,
             title: 'Code', thisTitle: 'value: $event', onConfirm: () {
           Navigator.of(Get.context!).pop();

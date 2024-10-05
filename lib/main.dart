@@ -34,7 +34,7 @@ Future<void> main() async {
 
   Hive.registerAdapter(EndpointModelAdapter());
   await dataController.initializedData();
-  await Hive.openBox('myBox');
+  // await Hive.openBox('myBox');
 
   runApp(const MyApp());
 }

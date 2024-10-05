@@ -1,12 +1,13 @@
-import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tapintapout/core/utils.dart';
+import 'package:telpo_flutter_sdk/telpo_flutter_sdk.dart';
 
 class PermissionController extends GetxController {
   var locationPermission = Rx<LocationPermission?>(null);
-  var bluetooth = BlueThermalPrinter.instance.obs;
+  // var bluetooth = BlueThermalPrinter.instance.obs;
   var storagePermission = Rx<PermissionStatus>(PermissionStatus.denied);
   var isPrinter = false.obs;
   @override
@@ -37,7 +38,17 @@ class PermissionController extends GetxController {
   }
 
   Future<void> isSunmiPrinterBind() async {
-    isPrinter.value = await SunmiPrinter.bindingPrinter() ?? false;
-    print('isPrinter: $isPrinter');
+    print('isSunmiPrinterBind model: ${deviceInfoService.deviceModel.value}');
+    if (deviceInfoService.deviceModel.value == "V2s_STGL") {
+      isPrinter.value = await SunmiPrinter.bindingPrinter() ?? false;
+    } else {
+      final telpoFlutterChannel = TelpoFlutterChannel();
+      isPrinter.value = await telpoFlutterChannel.connect();
+      final TelpoStatus status = await telpoFlutterChannel.checkStatus();
+      print('telpo connect: ${isPrinter.value}');
+      print('telpo status: $status');
+    }
+
+    print('isPrinter: ${isPrinter.value}');
   }
 }
