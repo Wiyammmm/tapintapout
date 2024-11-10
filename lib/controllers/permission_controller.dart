@@ -43,10 +43,18 @@ class PermissionController extends GetxController {
       isPrinter.value = await SunmiPrinter.bindingPrinter() ?? false;
     } else {
       final telpoFlutterChannel = TelpoFlutterChannel();
-      isPrinter.value = await telpoFlutterChannel.connect();
+      // isPrinter.value = await telpoFlutterChannel.connect();
       final TelpoStatus status = await telpoFlutterChannel.checkStatus();
       print('telpo connect: ${isPrinter.value}');
       print('telpo status: $status');
+      if (status == TelpoStatus.ok) {
+        isPrinter.value = true;
+      } else {
+        isPrinter.value = await telpoFlutterChannel.connect();
+        final TelpoStatus status = await telpoFlutterChannel.checkStatus();
+        print('telpo connect: ${isPrinter.value}');
+        print('telpo status: $status');
+      }
     }
 
     print('isPrinter: ${isPrinter.value}');

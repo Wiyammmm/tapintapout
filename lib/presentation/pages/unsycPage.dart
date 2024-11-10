@@ -36,6 +36,19 @@ class UnsyncPage extends StatelessWidget {
           child: Padding(
         padding: const EdgeInsets.all(16),
         child: Obx(() {
+          if (deviceInfoService.transactionResponse.value != "") {
+            print('transactionResponse.value not empty');
+
+            Future.delayed(const Duration(seconds: 3), () {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(deviceInfoService.transactionResponse.value),
+                  duration: Duration(seconds: 3),
+                ));
+              }
+            });
+          }
+
           if (tapoutController.transaction.isEmpty) {
             return Column(
               children: [

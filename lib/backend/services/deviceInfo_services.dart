@@ -19,6 +19,7 @@ class DeviceInfoService extends GetxService {
   static const platform = const MethodChannel("com.flutter.epic/epic");
   late LocationSettings locationSettings;
   StreamSubscription<Position>? positionStream;
+  var transactionResponse = "".obs;
   // Location location = Location();
   // StreamSubscription<LocationData>? locationSubscription;
   bool isfetchingFilipayCard = false;
@@ -145,6 +146,8 @@ class DeviceInfoService extends GetxService {
         //   isfetchingFilipayCard = false;
         // }
         if (transactionList.isNotEmpty) {
+          transactionResponse.value = "";
+          print('transactionResponse.value: ${transactionResponse.value}');
           print('transaction not empty');
           if (!isSendingTransaction) {
             isSendingTransaction = true;
@@ -170,7 +173,7 @@ class DeviceInfoService extends GetxService {
                 "maxfare": element.maxfare,
                 "ticketNumber": "${element.ticketNumber}",
                 "vehicleNo": "${element.vehicleNo}",
-                "plateNumber": "${element.plateNumber}",
+                // "plateNumber": "${element.plateNumber}",
                 "routeId": "${element.routeId}",
                 "driverId": "${element.driverId}",
                 "date": "${element.date}"
@@ -182,8 +185,13 @@ class DeviceInfoService extends GetxService {
                 dataController.updateFilipayCard();
                 await hiveService.removeTransactionFromHive(
                     element.ticketNumber, element.status);
+                transactionResponse.value = "";
+              } else {
+                transactionResponse.value =
+                    "${sendTransactionResponse['messages']['message']} at TicketNo: ${element.ticketNumber}";
               }
               print('element item: $item');
+              print('transactionResponse.value: ${transactionResponse.value}');
             }
             isSendingTransaction = false;
           }

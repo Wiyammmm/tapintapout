@@ -102,6 +102,7 @@ class GetDataServices {
     // end get fare
 
     // start get discount
+
     print('tapinUpdate cardid: $cardid');
     // print('tapinUpdate filipayCards: ${dataController.filipayCards[0].cardID}');
     FilipayCardModel filipayCardInfo =
@@ -117,10 +118,20 @@ class GetDataServices {
     amount = fare - discount;
     // end get amount
 
+    // update filipay card
+
+    double remainingBalance = await hiveService.updateFilipayBalance(
+        cardid,
+        double.parse(
+            "${dataController.selectedRoute.value!.maximumFare - amount}"),
+        false);
+
+// end update filipay card
+
     udpService.sendMessage(
-        "tapout:{ \'remainingBalance\': ${card.balance + amount}, \'maxFare\': ${dataController.selectedRoute.value!.maximumFare},\'refund\': ${dataController.selectedRoute.value!.maximumFare - amount},\'kmRun\': $kmrun,\'fare\': $fare,\'discount\': $discount}");
+        "tapout:{ \'remainingBalance\': $remainingBalance, \'maxFare\': ${dataController.selectedRoute.value!.maximumFare},\'refund\': ${dataController.selectedRoute.value!.maximumFare - amount},\'kmRun\': $kmrun,\'fare\': $fare,\'discount\': $discount}");
     dialogUtils.showTapout(Get.context!, () {}, {
-      'remainingBalance': card.balance + amount,
+      'remainingBalance': remainingBalance,
       'maxFare': dataController.selectedRoute.value!.maximumFare,
       'refund': dataController.selectedRoute.value!.maximumFare - amount,
       'kmRun': kmrun,
@@ -136,6 +147,7 @@ class GetDataServices {
     dataResponse['tapOutStationName'] = destinationStation.stationName;
     dataResponse['vehicleNo'] = selectedVehicle.vehicle_no;
     dataResponse['plateNumber'] = selectedVehicle.plate_no;
+    dataResponse['remainingBalance'] = remainingBalance;
     print('kmRun: ${dataResponse['kmrun']}');
     print('fare: ${dataResponse['fare']}');
     print('discount: ${dataResponse['discount']}');

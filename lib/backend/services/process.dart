@@ -173,6 +173,11 @@ class ProcessServices {
         driverId: userInfoController.userInfo.value!.id,
         date: getDataServices.getDateTime());
 
+    await hiveService.updateFilipayBalance(
+        tagid,
+        double.parse(coopInfoController.coopInfo.value!.maximumFare.toString()),
+        true);
+
     await hiveService.addTransaction(transaction);
 
     await hiveService.addTapin(tapin);

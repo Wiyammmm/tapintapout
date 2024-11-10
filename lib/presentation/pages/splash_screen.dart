@@ -15,18 +15,24 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
+
     // Simulate some initialization
     Future.delayed(Duration(seconds: 2), () {
+      initFunction();
       // Navigate to the home screen after 3 seconds
-      dataController.filipayCards.isEmpty && tapinController.tapin.isEmpty
-          ? Get.off(LoginPage())
-          //  Routes.LOGIN
-          : dataController.selectedRoute.value == null
-              // ? Routes.ROUTE_DETAIL
-              ? Get.off(SelectRoutePage())
-              // : Routes.HOME;
-              : Get.off(HomePage());
     });
+  }
+
+  void initFunction() async {
+    await dataController.initializedData();
+    dataController.filipayCards.isEmpty && tapinController.tapin.isEmpty
+        ? Get.offAll(LoginPage())
+        //  Routes.LOGIN
+        : dataController.selectedRoute.value == null
+            // ? Routes.ROUTE_DETAIL
+            ? Get.offAll(SelectRoutePage())
+            // : Routes.HOME;
+            : Get.offAll(HomePage());
   }
 
   @override

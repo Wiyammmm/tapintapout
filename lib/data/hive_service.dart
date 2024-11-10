@@ -52,8 +52,13 @@ class HiveService {
 
   Future<void> storeFilipayCards(List<FilipayCardModel> filipayCards) async {
     var box = await Hive.openBox<List>('filipayCards');
+    if (filipayCards.isNotEmpty) {
+      await box.put('filipayCardsList', filipayCards);
+      print('storeFilipayCards updated successfully');
+    } else {
+      print('failed bcs storeFilipayCards empty');
+    }
 
-    await box.put('filipayCardsList', filipayCards);
     // await box.clear();
     // Map<int, FilipayCardModel> cardMap = {
     //   for (int i = 0; i < filipayCards.length; i++) i: filipayCards[i]
@@ -226,7 +231,8 @@ class HiveService {
         'destination': destination,
         'date': updatedTapin.dateTime,
         'vehicleNo': dataUpdate['vehicleNo'],
-        'plateNumber': dataUpdate['plateNumber']
+        'plateNumber': dataUpdate['plateNumber'],
+        'remainingBalance': dataUpdate['remainingBalance']
       });
     }
 
@@ -304,6 +310,40 @@ class HiveService {
 
     // Refresh the observable list to notify listeners of the change
     tapinController.tapin.refresh();
+  }
+
+  Future<double> updateFilipayBalance(
+      String cardid, double amount, bool isDeduct) async {
+    double remainingBalance = 0;
+    var box = await Hive.openBox<List>('filipayCards');
+
+    List<FilipayCardModel> filipaycards =
+        box.get('filipayCardsList')?.cast<FilipayCardModel>() ??
+            <FilipayCardModel>[];
+    ;
+    FilipayCardModel card =
+        filipaycards.firstWhere((card) => card.cardID == cardid);
+    int cardIndex = filipaycards.indexWhere((card) => card.cardID == cardid);
+    if (isDeduct) {
+      remainingBalance = card.balance - amount;
+    } else {
+      remainingBalance = card.balance + amount;
+    }
+
+    FilipayCardModel newcard = FilipayCardModel(
+        id: card.id,
+        cardID: card.cardID,
+        balance: remainingBalance,
+        sNo: card.sNo,
+        cardType: card.cardType);
+    filipaycards[cardIndex] = newcard;
+
+    print('remainingBalance: bal: ${card.balance}');
+    print('remainingBalance: amount: $amount');
+    print('remainingBalance: $remainingBalance');
+
+    await box.put('filipayCards', filipaycards);
+    return remainingBalance;
   }
 
   // Future<void> storeTransaction(List<TransactionModel> transaction) async {

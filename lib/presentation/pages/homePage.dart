@@ -107,6 +107,7 @@ class _HomePageState extends State<HomePage> {
     bool isAvailable = await NfcManager.instance.isAvailable();
 
     if (isAvailable) {
+      print('nfc: $isAvailable');
       // Start NFC session
       NfcManager.instance.startSession(
         onDiscovered: (NfcTag tag) async {
@@ -213,10 +214,15 @@ class _HomePageState extends State<HomePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const circleButton(
-                              thisIcon: Icon(
-                                Icons.qr_code,
-                                size: 40,
+                            GestureDetector(
+                              onTap: () async {
+                                await dialogUtils.showQrPage(context);
+                              },
+                              child: const circleButton(
+                                thisIcon: Icon(
+                                  Icons.qr_code,
+                                  size: 40,
+                                ),
                               ),
                             ),
                             // const SizedBox(

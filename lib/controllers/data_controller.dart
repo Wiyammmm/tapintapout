@@ -284,7 +284,10 @@ class DataController extends GetxService {
   Future<void> updateFilipayCard() async {
     print('updateFilipayCard called');
     try {
+      apiProvider.cancelRequest();
+      apiProvider.openRequest();
       final filipayCardResponse = await apiProvider.fetchFilipayCards();
+
       List<FilipayCardModel> filipayCardsList = filipayCardResponse
           .map((data) => FilipayCardModel(
               id: data['_id'],
@@ -298,9 +301,10 @@ class DataController extends GetxService {
       if (filipayCardsList.isNotEmpty) {
         filipayCards.value = filipayCardsList;
         filipayCards.refresh();
+        print('updateFilipayCard successfully');
+      } else {
+        print('updateFilipayCard not updated bcs empty');
       }
-
-      print('updateFilipayCard successfully');
     } catch (e) {
       print('error updateFilipayCard: $e');
       updateFilipayCard();
@@ -319,6 +323,9 @@ class DataController extends GetxService {
         if (tapinResponse.isNotEmpty) {
           if (tapinResponse['messages']['code'] == 0) {
             return tapinResponse;
+          } else {
+            response['messages']['message'] =
+                tapinResponse['messages']['message'];
           }
         }
       } else if (item['status'] == 'tapout') {
@@ -326,6 +333,9 @@ class DataController extends GetxService {
         print('tapoutResponse: $tapoutResponse');
         if (tapoutResponse['messages']['code'] == 0) {
           return tapoutResponse;
+        } else {
+          response['messages']['message'] =
+              tapoutResponse['messages']['message'];
         }
       } else {
         print('invalid item');

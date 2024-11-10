@@ -1,18 +1,18 @@
-import 'dart:io';
-import 'dart:math';
-import 'dart:typed_data';
+// import 'dart:io';
+// import 'dart:math';
+// import 'dart:typed_data';
 
 // import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+// import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
-import 'package:sunmi_scanner/sunmi_scanner.dart';
+// import 'package:sunmi_printer_plus/sunmi_printer_plus.dart';
+// import 'package:sunmi_scanner/sunmi_scanner.dart';
 import 'package:tapintapout/backend/printer/printerController.dart';
 import 'package:tapintapout/backend/services/udp_services.dart';
 import 'package:tapintapout/core/sweetalert.dart';
 import 'package:tapintapout/core/utils.dart';
-import 'package:tapintapout/models/station_model.dart';
+// import 'package:tapintapout/models/station_model.dart';
 import 'package:tapintapout/presentation/pages/unsycPage.dart';
 import 'package:udp/udp.dart';
 import 'package:network_info_plus/network_info_plus.dart';
@@ -67,7 +67,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> sendMessage(String message) async {
     udpService.sendMessage(message);
     if (mounted) {
-      udpService.messages.add('sent: $message');
+      // udpService.messages.add('sent: $message');
+      udpService.messages.add('${udpService.messages.length}. sent: message');
     }
   }
 
@@ -125,7 +126,7 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
       body: SafeArea(child: Obx(() {
         return Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -161,6 +162,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     },
                     child: Text('Sync Data')),
               ),
+      
               // ElevatedButton(
               //     onPressed: () async {
               //       await getDataServices.getSelectedVehicleInfo();

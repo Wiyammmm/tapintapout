@@ -14,36 +14,24 @@ class CoopInfoModel extends HiveObject {
   String cooperativeCodeName;
 
   @HiveField(3)
-  double minimum_fare;
-
-  @HiveField(4)
-  double pricePerKM;
-
-  @HiveField(5)
-  bool isNumeric;
-
-  @HiveField(6)
   String coopType;
 
-  @HiveField(7)
+  @HiveField(4)
   double maximumBaggage;
 
-  @HiveField(8)
+  @HiveField(5)
   double maximumFare;
 
-  @HiveField(9)
+  @HiveField(6)
   String modeOfPayment;
 
-  @HiveField(10)
+  @HiveField(7)
   double balance;
 
   CoopInfoModel(
       {required this.id,
       required this.cooperativeName,
       required this.cooperativeCodeName,
-      required this.minimum_fare,
-      required this.pricePerKM,
-      required this.isNumeric,
       required this.coopType,
       required this.maximumBaggage,
       required this.maximumFare,

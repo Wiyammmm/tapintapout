@@ -95,6 +95,9 @@ class PrintServices extends GetxService {
         printdata("DATE:    ${newText('${item['date']}', 36)}", 0),
         printdata("FARE:    ${newText('${item['fare']}', 50)}", 0),
         printdata("DISCOUNT:${newText('${item['discount']}', 45)}", 0),
+        printdata(
+            "REM BAL: ${newText('${double.parse(item['remainingBalance'].toString()).toStringAsFixed(2)}', 45)}",
+            0),
         printdata("TOTAL AMOUNT", 1, 3),
         printdata("${item['amount']}", 1, 3),
         printdata("- - - - - - - - - - - - - - - -", 1),
@@ -125,7 +128,8 @@ class PrintServices extends GetxService {
       await printLeftRight("DATE:    ", item['date']);
       await printLeftRight("FARE:    ", item['fare']);
       await printLeftRight("DISCOUNT:", item['discount']);
-
+      await printLeftRight("REM BAL: ",
+          '${double.parse(item['remainingBalance'].toString()).toStringAsFixed(2)}');
       await SunmiPrinter.bold();
       await SunmiPrinter.setAlignment(SunmiPrintAlign.CENTER);
       await SunmiPrinter.setCustomFontSize(30);

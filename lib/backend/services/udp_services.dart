@@ -63,7 +63,7 @@ class UdpService extends GetxService {
         if (datagram != null) {
           var str = String.fromCharCodes(datagram.data);
           messageReceived.value = "$flag$str";
-          print(messageReceived.value);
+          print('message received: ${messageReceived.value}');
           // messages.add("$flag$str");
           messages.add("${messages.length}. Received from tps530");
           tps530IP.value = extractIp(str);

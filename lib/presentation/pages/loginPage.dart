@@ -74,30 +74,30 @@ class LoginPage extends StatelessWidget {
         if (isLocationPermission ||
             !isBluetoothPermission ||
             isStoragePermission) {
+          print('go permission dialog');
           if (Navigator.canPop(context)) {
             print('navigator pop?');
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.pop(context);
-              print('navigator yes pop');
-            });
+            Navigator.pop(context);
           }
           print(
               'permissionController.locationPermission.value: ${permissionController.locationPermission.value}');
           WidgetsBinding.instance.addPostFrameCallback((_) {
             dialogUtils.showPermissionDialogs(context);
           });
-        }else{
-              if (Navigator.canPop(context)) {
+        } else {
+          if (Navigator.canPop(context)) {
             print('navigator pop?');
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              Navigator.pop(context);
-              print('navigator yes pop');
-            });
+            Navigator.pop(context);
           }
         }
 
         if (authController.isLoading.value) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (Navigator.canPop(context)) {
+            print('navigator pop?');
+            Navigator.pop(context);
+            print('navigator yes pop');
+          }
+          Future.delayed(Duration.zero, () {
             showDialog<void>(
               context: context,
               barrierDismissible: false,
@@ -112,45 +112,54 @@ class LoginPage extends StatelessWidget {
               },
             );
           });
-        }
-        // else {
-        //   // Hide the dialog if isLoading becomes false
-        //   if (Navigator.canPop(context)) {
-        //     WidgetsBinding.instance.addPostFrameCallback((_) {
-        //       Navigator.pop(context);
-        //     });
-        //   }
-        // }
-
-        if (authController.errorPrompt.isNotEmpty) {
-          print('error prompt: ${authController.errorPrompt.value}');
-          if (Navigator.canPop(context)) {
-            print('navigator pop?');
-            WidgetsBinding.instance.addPostFrameCallback((_) {
+        } else {
+          if (!authController.isLoading.value &&
+              authController.errorPrompt.isNotEmpty) {
+            if (Navigator.canPop(context)) {
+              print('navigator pop?');
               Navigator.pop(context);
               print('navigator yes pop');
+            }
+            Future.delayed(Duration.zero, () {
+              print('login show dialog');
+              if (authController.errorPrompt.isNotEmpty) {
+                showDialog<void>(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    print('error prompt: ${authController.errorPrompt}');
+                    return AlertDialog(
+                      title: Center(
+                          child: FittedBox(
+                              child: Text(
+                                  '${authController.errorPrompt['title']}'))),
+                      content: Wrap(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text('${authController.errorPrompt['label']}')
+                            ],
+                          ),
+                          Center(
+                            child: ElevatedButton(
+                                onPressed: () {
+                                  authController.errorPrompt.clear();
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text('OK')),
+                          )
+                        ],
+                      ),
+                    );
+                  },
+                );
+                // .then((value) {
+                //   authController.errorPrompt.clear();
+                // });
+              }
             });
           }
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            showDialog<void>(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: Center(
-                      child: FittedBox(
-                          child:
-                              Text('${authController.errorPrompt['title']}'))),
-                  content: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Text('${authController.errorPrompt['label']}')],
-                  ),
-                );
-              },
-            ).then((value) {
-              authController.errorPrompt.clear();
-              print('error prompt clear: ${authController.errorPrompt.value}');
-            });
-          });
         }
 
         return Stack(

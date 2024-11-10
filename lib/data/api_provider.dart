@@ -4,6 +4,8 @@ import 'dart:convert';
 import 'package:tapintapout/core/utils.dart';
 
 class ApiProvider {
+  http.Client? _client = http.Client();
+  bool _canceledFetchingFilipaycard = false;
   final String baseUrl =
       'https://filipworks.com/api2/api/v1/filipay'; // Replace with actual URL
   final String token =
@@ -29,16 +31,24 @@ class ApiProvider {
         if (data.containsKey('response')) {
           return data;
         } else {
-          throw Exception('Invalid response format');
+          return {
+            "messages": {"code": 1, "message": "Something went wrong"},
+            "response": {}
+          };
         }
       } else {
         // Handle HTTP error responses
-        throw Exception(
-            'Failed to load routes: ${response.statusCode} ${response.reasonPhrase}');
+        return {
+          "messages": {"code": 1, "message": "Something went wrong"},
+          "response": {}
+        };
       }
     } catch (e) {
       print('Error Login: $e');
-      return {};
+      return {
+        "messages": {"code": 1, "message": "Slow or No Internet Connection"},
+        "response": {}
+      };
     }
   }
 
@@ -104,15 +114,19 @@ class ApiProvider {
 
   Future<List<dynamic>> fetchFilipayCards() async {
     try {
-      final response = await http.get(
+      if (_client == null) {
+        _client = http.Client();
+      }
+      final response = await _client?.get(
           Uri.parse('http://172.232.77.205:3000/api/v1/filipay/filipaycard'),
           headers: {
             'Authorization':
                 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiZnVuY3Rpb24gbm93KCkgeyBbbmF0aXZlIGNvZGVdIH0iLCJpYXQiOjE2OTcwOTcyNjl9.tT7GdpjGqGRRuP83ts2Ok2arhVu8sAyFKWjd8M7do9k',
             'Content-Type': 'application/json',
           });
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
+
+      if (response?.statusCode == 200) {
+        final data = json.decode(response!.body);
         if (data.containsKey('response')) {
           return data['response'];
         } else {
@@ -120,7 +134,7 @@ class ApiProvider {
         }
       } else {
         throw Exception(
-            'Failed to load filipaycard: ${response.statusCode} ${response.reasonPhrase}');
+            'Failed to load filipaycard: ${response?.statusCode} ${response?.reasonPhrase}');
       }
     } catch (e) {
       print('Error fetching fetchFilipayCards: $e');
@@ -202,6 +216,21 @@ class ApiProvider {
     } catch (e) {
       print('Error tapoutTransaction: $e');
       return {};
+    }
+  }
+
+  void cancelRequest() {
+    _client?.close();
+    _client = null;
+    print('canceled filipaycard: $_client');
+  }
+
+  void openRequest() {
+    if (_client == null) {
+      _client = http.Client(); // Recreate the client if it was closed
+      print('filipaycard Reopened the http client');
+    } else {
+      print('filipaycard Client is already open');
     }
   }
 }

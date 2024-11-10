@@ -20,21 +20,18 @@ class CoopInfoModelAdapter extends TypeAdapter<CoopInfoModel> {
       id: fields[0] as String,
       cooperativeName: fields[1] as String,
       cooperativeCodeName: fields[2] as String,
-      minimum_fare: fields[3] as double,
-      pricePerKM: fields[4] as double,
-      isNumeric: fields[5] as bool,
-      coopType: fields[6] as String,
-      maximumBaggage: fields[7] as double,
-      maximumFare: fields[8] as double,
-      modeOfPayment: fields[9] as String,
-      balance: fields[10] as double,
+      coopType: fields[3] as String,
+      maximumBaggage: fields[4] as double,
+      maximumFare: fields[5] as double,
+      modeOfPayment: fields[6] as String,
+      balance: fields[7] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, CoopInfoModel obj) {
     writer
-      ..writeByte(11)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -42,20 +39,14 @@ class CoopInfoModelAdapter extends TypeAdapter<CoopInfoModel> {
       ..writeByte(2)
       ..write(obj.cooperativeCodeName)
       ..writeByte(3)
-      ..write(obj.minimum_fare)
-      ..writeByte(4)
-      ..write(obj.pricePerKM)
-      ..writeByte(5)
-      ..write(obj.isNumeric)
-      ..writeByte(6)
       ..write(obj.coopType)
-      ..writeByte(7)
+      ..writeByte(4)
       ..write(obj.maximumBaggage)
-      ..writeByte(8)
+      ..writeByte(5)
       ..write(obj.maximumFare)
-      ..writeByte(9)
+      ..writeByte(6)
       ..write(obj.modeOfPayment)
-      ..writeByte(10)
+      ..writeByte(7)
       ..write(obj.balance);
   }
 

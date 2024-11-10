@@ -1,4 +1,5 @@
 import 'package:bcrypt/bcrypt.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:geolocator/geolocator.dart';
@@ -93,6 +94,14 @@ class DialogUtils {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
+        Future.delayed(Duration(seconds: 5), () {
+          if (context.mounted) {
+            if (Navigator.of(context).mounted && Navigator.canPop(context)) {
+              print('navigator pop?');
+              Navigator.pop(context);
+            }
+          }
+        });
         return AlertDialog(
           title: Image.asset(
             'assets/filipaylogobanner.png',
@@ -125,6 +134,14 @@ class DialogUtils {
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
+        Future.delayed(Duration(seconds: 5), () {
+          if (context.mounted) {
+            if (Navigator.of(context).mounted && Navigator.canPop(context)) {
+              print('navigator pop?');
+              Navigator.pop(context);
+            }
+          }
+        });
         return AlertDialog(
           title: Image.asset(
             'assets/filipaylogobanner.png',
@@ -137,7 +154,7 @@ class DialogUtils {
               child: Column(
                 children: [
                   Text(
-                      'Your Traveled Fare is ${double.parse(item['remainingBalance'].toString()).toStringAsFixed(2)}'),
+                      'Your Traveled Fare is ${double.parse(item['maxFare'].toString()).toStringAsFixed(2)}'),
                   Text(
                       'We had refund -${double.parse(item['refund'].toString()).toStringAsFixed(2)}'),
                   Divider(),
@@ -185,6 +202,60 @@ class DialogUtils {
         );
       },
     ).then((value) => onConfirm);
+  }
+
+  Future<void> showQrPage(BuildContext context) async {
+    if (deviceInfoService.deviceModel.value == "V2s_STGL") {
+      String title = '';
+      if (deviceInfoService.isSunmiScanner.value) {
+        title = 'Use side button for scanning';
+      } else {
+        title = 'Turn on first scanning in settings';
+      }
+      showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              title,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 25),
+            ),
+            content: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Thank you',
+                  style: TextStyle(fontSize: 20),
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    } else {
+      showDialog<void>(
+        context: context,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            title: Text(
+              'Not Available',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 25),
+            ),
+            content: Wrap(
+              children: [
+                Text(
+                  'Sorry this feature is not yet available for this device.',
+                  style: TextStyle(fontSize: 18),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
   }
 
   void showLoadingDialog(BuildContext context, String title) {
@@ -282,7 +353,21 @@ class DialogUtils {
     );
   }
 
+  bool isLocationPermission = permissionController.locationPermission.value ==
+      LocationPermission.denied;
+
+  bool isBluetoothPermission = permissionController.isPrinter.value;
+
+  bool isStoragePermission =
+      permissionController.storagePermission.value == PermissionStatus.denied;
   Future<void> showPermissionDialogs(BuildContext context) async {
+    print('showPermissionDialogs');
+    if (!isLocationPermission &&
+        isBluetoothPermission &&
+        !isStoragePermission) {
+      print('print all permission ok');
+      return;
+    }
     showDialog<void>(
       context: context,
       barrierDismissible: false,

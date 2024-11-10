@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'package:tapintapout/backend/services/udp_services.dart';
 import 'package:tapintapout/core/theme.dart';
-import 'package:tapintapout/core/utils.dart';
 import 'package:tapintapout/models/coopinfo_model.dart';
 import 'package:tapintapout/models/endpoint_model.dart';
 import 'package:tapintapout/models/filipaycard_model.dart';
@@ -15,11 +12,14 @@ import 'package:tapintapout/models/tapin_model.dart';
 import 'package:tapintapout/models/transaction_model.dart';
 import 'package:tapintapout/models/userinfo_model.dart';
 import 'package:tapintapout/models/vehicle_model.dart';
+import 'package:tapintapout/presentation/pages/splash_screen.dart';
 import 'package:tapintapout/routes/app_pages.dart';
 import 'package:get/get.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+
   await Hive.initFlutter();
 
   Hive.registerAdapter(RouteModelAdapter());
@@ -33,7 +33,7 @@ Future<void> main() async {
   Hive.registerAdapter(VehicleModelAdapter());
 
   Hive.registerAdapter(EndpointModelAdapter());
-  await dataController.initializedData();
+
   // await Hive.openBox('myBox');
 
   runApp(const MyApp());
@@ -46,12 +46,13 @@ class MyApp extends StatelessWidget {
     return GetMaterialApp(
       theme: appTheme,
       debugShowCheckedModeBanner: false,
-      initialRoute:
-          (dataController.filipayCards.isEmpty && tapinController.tapin.isEmpty)
-              ? Routes.LOGIN
-              : dataController.selectedRoute.value == null
-                  ? Routes.ROUTE_DETAIL
-                  : Routes.HOME,
+      home: SplashScreen(),
+      // initialRoute:
+      //     (dataController.filipayCards.isEmpty && tapinController.tapin.isEmpty)
+      //         ? Routes.LOGIN
+      //         : dataController.selectedRoute.value == null
+      //             ? Routes.ROUTE_DETAIL
+      //             : Routes.HOME,
       getPages: AppPages.routes,
     );
     // MaterialApp(

@@ -10,70 +10,81 @@ import '../routes/app_pages.dart';
 class AuthController extends GetxService {
   var isLoading = false.obs;
   ApiProvider apiProvider = ApiProvider();
-  RxMap<String, dynamic> errorPrompt = <String, dynamic>{}.obs;
-
+  // RxMap<String, dynamic> errorPrompt = <String, dynamic>{}.obs;
+  Map<String, dynamic> errorPrompt = {};
   Future<void> login(String email, String password) async {
     var response;
     isLoading(true);
-    try {
-      // String deviceId = await deviceInfoService.getDeviceSerialNumber();
-      response = await apiProvider.login(
-          email, password, deviceInfoService.serialNumber.value);
-      print('response: $response');
-      isLoading(false);
-      if (response['messages']['code'] != 0) {
-        errorPrompt.value = {
-          'title': '${response['messages']['message']}',
-          'label': 'Please try again',
-          'isCancel': false
-        };
-      } else {
-        var userinfo = response['response']['userInfo'];
-        var coopinfo = response['response']['coopInfo'];
-        UserInfoModel userInfoModel = UserInfoModel(
-            id: userinfo['_id'],
-            firstName: userinfo['firstName'],
-            lastName: userinfo['lastName'],
-            email: userinfo['email'],
-            password: userinfo['password']);
-        CoopInfoModel coopInfoModel = CoopInfoModel(
-            id: coopinfo['_id'],
-            cooperativeName: coopinfo['cooperativeName'],
-            cooperativeCodeName: coopinfo['cooperativeCodeName'],
-            minimum_fare: double.parse('${coopinfo['minimum_fare']}'),
-            pricePerKM: double.parse(coopinfo['pricePerKM'].toString()),
-            isNumeric: coopinfo['isNumeric'],
-            coopType: coopinfo['coopType'],
-            maximumBaggage: double.parse(coopinfo['maximumBaggage'].toString()),
-            maximumFare: double.parse(coopinfo['maximumFare'].toString()),
-            modeOfPayment: coopinfo['modeOfPayment'],
-            balance: double.parse(coopinfo['balance'].toString()));
-        await userInfoController.updateUserInfoValue(userInfoModel);
-        await coopInfoController.updateCoopInfoValue(coopInfoModel);
-        print('success');
-        dataController.fetchAndStoreData();
-        errorPrompt.value.clear();
-        Get.offAllNamed(Routes.ROUTE_DETAIL);
-      }
-    } catch (e) {
-      isLoading(false);
-      print('login error: $e');
-      if (response != null) {
-        if (response.containsKey('messages')) {
-          errorPrompt.value = {
-            'title': '${response['messages']['message']}',
-            'label': 'Please try again',
-            'isCancel': false
-          };
-        }
-      } else {
-        errorPrompt.value = {
-          'title': 'Something went wrong',
-          'label': 'Please try again',
-          'isCancel': false
-        };
-      }
+    // try {
+    // String deviceId = await deviceInfoService.getDeviceSerialNumber();
+    response = await apiProvider.login(
+        email, password, deviceInfoService.serialNumber.value);
+    print('response: $response');
+    isLoading(false);
+
+    if (response['messages']['code'] != 0) {
+      print('login !=0');
+      errorPrompt = {
+        'title': '${response['messages']['message']}',
+        'label': 'Please try again',
+        'isCancel': false
+      };
+      // return;
+    } else {
+      // isLoading(false);
+      errorPrompt.clear();
+      print('login ok');
+      var userinfo = response['response']['userInfo'];
+      var coopinfo = response['response']['coopInfo'];
+      UserInfoModel userInfoModel = UserInfoModel(
+          id: userinfo['_id'],
+          firstName: userinfo['firstName'],
+          lastName: userinfo['lastName'],
+          email: userinfo['email'],
+          password: userinfo['password']);
+      CoopInfoModel coopInfoModel = CoopInfoModel(
+          id: coopinfo['_id'],
+          cooperativeName: coopinfo['cooperativeName'],
+          cooperativeCodeName: coopinfo['cooperativeCodeName'],
+          coopType: coopinfo['coopType'],
+          maximumBaggage: double.parse(coopinfo['maximumBaggage'].toString()),
+          maximumFare: double.parse(coopinfo['maximumFare'].toString()),
+          modeOfPayment: coopinfo['modeOfPayment'],
+          balance: double.parse(coopinfo['balance'].toString()));
+      await userInfoController.updateUserInfoValue(userInfoModel);
+      await coopInfoController.updateCoopInfoValue(coopInfoModel);
+      print('success');
+      dataController.fetchAndStoreData();
+
+      Get.offAllNamed(Routes.ROUTE_DETAIL);
     }
+    // } catch (e) {
+    //   isLoading(false);
+    //   print('login error: $e');
+
+    //   if (response != null) {
+    //     print('login not null');
+    //     if (response['messages']['message'] == 'OK') {
+    //       response['messages']['message'] = 'Something went wrong';
+    //     }
+    //     if (response.containsKey('messages')) {
+    //       print('login contains messages');
+    //       errorPrompt = {
+    //         'title': '${response['messages']['message']}',
+    //         'label': 'Please try again',
+    //         'isCancel': false
+    //       };
+    //     }
+    //   } else {
+    //     print('login null');
+    //     errorPrompt = {
+    //       'title': 'Something went wrong',
+    //       'label': 'Please try again',
+    //       'isCancel': false
+    //     };
+    //   }
+    //   // return;
+    // }
 
     // if (response['status'] == 'success') {
     //   // Save login details (JWT, etc.) if needed
